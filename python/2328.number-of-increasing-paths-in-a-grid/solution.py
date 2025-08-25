@@ -52,18 +52,25 @@ from leetgo_py import *
 
 # @lc code=begin
 
+
 class Solution:
     def countPaths(self, grid: List[List[int]]) -> int:
-        dd=[(0,1),(0,-1),(1,0),(-1,0)]
-        m,n=len(grid),len(grid[0])
+        dd = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        m, n = len(grid), len(grid[0])
+
         @cache
-        def dfs(i,j):
-            res=0
-            for dx,dy in dd:
-                if 0<=i+dx<m and 0<=j+dy<n and grid[i][j]<grid[i+dx][j+dy]:
-                    res+=dfs(i+dx,j+dy)
-            return res+1
-        return sum(dfs(i,j) for i in range(m) for j in range(n)) % (10**9 + 7)
+        def dfs(i, j):
+            res = 0
+            for dx, dy in dd:
+                if (
+                    0 <= i + dx < m
+                    and 0 <= j + dy < n
+                    and grid[i][j] < grid[i + dx][j + dy]
+                ):
+                    res += dfs(i + dx, j + dy)
+            return res + 1
+
+        return sum(dfs(i, j) for i in range(m) for j in range(n)) % (10**9 + 7)
 
 
 # @lc code=end

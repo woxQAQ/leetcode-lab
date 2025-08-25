@@ -53,21 +53,24 @@ from leetgo_py import *
 
 # @lc code=begin
 
+
 class Solution:
     def calculateMinimumHP(self, dungeon: List[List[int]]) -> int:
         """
         dfs(i,j) (i,j) 出发到 (n-1,m-1) 所需的最小生命值
         """
-        n,m=len(dungeon),len(dungeon[0])
+        n, m = len(dungeon), len(dungeon[0])
+
         @cache
-        def dfs(i,j):
+        def dfs(i, j):
             if i >= n or j >= m:
                 return inf
-            if i == n-1 and j == m-1:
-                return max(1,1-dungeon[i][j])
-            return max(min(dfs(i+1,j), dfs(i,j+1)) - dungeon[i][j],1)
+            if i == n - 1 and j == m - 1:
+                return max(1, 1 - dungeon[i][j])
+            return max(min(dfs(i + 1, j), dfs(i, j + 1)) - dungeon[i][j], 1)
+
         # ans = dfs(len(dungeon)-1,len(dungeon[0])-1)
-        return dfs(0,0)
+        return dfs(0, 0)
 
 
 # @lc code=end

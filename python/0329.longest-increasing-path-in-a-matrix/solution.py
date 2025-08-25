@@ -51,23 +51,30 @@ from leetgo_py import *
 
 # @lc code=begin
 
+
 class Solution:
     def longestIncreasingPath(self, matrix: List[List[int]]) -> int:
         """
         搜索所有路径
         """
-        dd = (1,0),(0,1),(-1,0),(0,-1)
+        dd = (1, 0), (0, 1), (-1, 0), (0, -1)
+
         @cache
-        def dfs(i,j):
+        def dfs(i, j):
             if i < 0 or i >= len(matrix) or j < 0 or j >= len(matrix[0]):
                 return 0
             res = 0
-            for dx,dy in dd:
-                if 0<=i+dx<len(matrix) and 0<=j+dy<len(matrix[0]) and matrix[i][j]<matrix[i+dx][j+dy]:
-                    res = max(res, dfs(i+dx,j+dy))
+            for dx, dy in dd:
+                if (
+                    0 <= i + dx < len(matrix)
+                    and 0 <= j + dy < len(matrix[0])
+                    and matrix[i][j] < matrix[i + dx][j + dy]
+                ):
+                    res = max(res, dfs(i + dx, j + dy))
             return res + 1
 
-        return max(dfs(i,j) for i in range(len(matrix)) for j in range(len(matrix[0])))
+        return max(dfs(i, j) for i in range(len(matrix)) for j in range(len(matrix[0])))
+
 
 # @lc code=end
 

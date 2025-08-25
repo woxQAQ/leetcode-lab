@@ -2,11 +2,11 @@
 # leetgo: 1.4.15
 # https://leetcode.cn/problems/maximum-non-negative-product-in-a-matrix/
 
-from functools import cache
 from typing import *
 from leetgo_py import *
 
 # @lc code=begin
+
 
 class Solution:
     def maxProductPath(self, grid: List[List[int]]) -> int:
@@ -26,28 +26,29 @@ class Solution:
         #     else:
         #         _func = min if flag else max
         #         return _func(dfs(i-1,j,flag),dfs(i,j-1,flag)) * grid[i][j]
-        n,m = len(grid),len(grid[0])
+        n, m = len(grid), len(grid[0])
         MOD = 10**9 + 7
         # return -1 if dfs(n-1,m-1,False) < 0 else dfs(n-1,m-1,False) % MOD
 
-        dpmax = [[0]*m for _ in range(n)]
-        dpmin = [[0]*m for _ in range(n)]
+        dpmax = [[0] * m for _ in range(n)]
+        dpmin = [[0] * m for _ in range(n)]
         dpmax[0][0] = dpmin[0][0] = grid[0][0]
-        for i in range(1,n):
-            dpmax[i][0] = dpmax[i-1][0] * grid[i][0]
-            dpmin[i][0] = dpmin[i-1][0] * grid[i][0]
-        for j in range(1,m):
-            dpmax[0][j] = dpmax[0][j-1] * grid[0][j]
-            dpmin[0][j] = dpmin[0][j-1] * grid[0][j]
-        for i in range(1,n):
-            for j in range(1,m):
+        for i in range(1, n):
+            dpmax[i][0] = dpmax[i - 1][0] * grid[i][0]
+            dpmin[i][0] = dpmin[i - 1][0] * grid[i][0]
+        for j in range(1, m):
+            dpmax[0][j] = dpmax[0][j - 1] * grid[0][j]
+            dpmin[0][j] = dpmin[0][j - 1] * grid[0][j]
+        for i in range(1, n):
+            for j in range(1, m):
                 if grid[i][j] < 0:
-                    dpmax[i][j] = min(dpmin[i-1][j],dpmin[i][j-1]) * grid[i][j]
-                    dpmin[i][j] = max(dpmax[i-1][j],dpmax[i][j-1]) * grid[i][j]
+                    dpmax[i][j] = min(dpmin[i - 1][j], dpmin[i][j - 1]) * grid[i][j]
+                    dpmin[i][j] = max(dpmax[i - 1][j], dpmax[i][j - 1]) * grid[i][j]
                 else:
-                    dpmax[i][j] = max(dpmax[i-1][j],dpmax[i][j-1]) * grid[i][j]
-                    dpmin[i][j] = min(dpmin[i-1][j],dpmin[i][j-1]) * grid[i][j]
-        return -1 if dpmax[n-1][m-1] < 0 else dpmax[n-1][m-1] % MOD
+                    dpmax[i][j] = max(dpmax[i - 1][j], dpmax[i][j - 1]) * grid[i][j]
+                    dpmin[i][j] = min(dpmin[i - 1][j], dpmin[i][j - 1]) * grid[i][j]
+        return -1 if dpmax[n - 1][m - 1] < 0 else dpmax[n - 1][m - 1] % MOD
+
 
 # @lc code=end
 

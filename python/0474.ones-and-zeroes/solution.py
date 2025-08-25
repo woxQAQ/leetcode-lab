@@ -9,6 +9,7 @@ from leetgo_py import *
 
 # @lc code=begin
 
+
 class Solution:
     def findMaxForm(self, strs: List[str], m: int, n: int) -> int:
         """
@@ -35,7 +36,7 @@ class Solution:
         @cache
         def count(i):
             counter = Counter(strs[i])
-            return counter['0'],counter['1']
+            return counter["0"], counter["1"]
 
         # @cache
         # def dfs(i,j,k):
@@ -60,14 +61,16 @@ class Solution:
         #                 if j >= c0 and k >= c1:
         #                     dp[i][j][k] = max(dp[i][j][k],dp[i-1][j-c0][k-c1]+1)
         # return dp[len(strs)][m][n]
-        dp = [[0] * (n+1) for _ in range(m+1)]
+        dp = [[0] * (n + 1) for _ in range(m + 1)]
         for i in range(len(strs)):
-            c0,c1 = count(i)
-            for j in range(m,-1,-1):
-                for k in range(n,-1,-1):
+            c0, c1 = count(i)
+            for j in range(m, -1, -1):
+                for k in range(n, -1, -1):
                     if j >= c0 and k >= c1:
-                        dp[j][k] = max(dp[j][k],dp[j-c0][k-c1]+1)
+                        dp[j][k] = max(dp[j][k], dp[j - c0][k - c1] + 1)
         return dp[m][n]
+
+
 # @lc code=end
 
 if __name__ == "__main__":

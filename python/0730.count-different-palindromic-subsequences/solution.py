@@ -8,9 +8,10 @@ from leetgo_py import *
 
 # @lc code=begin
 
+
 class Solution:
     def countPalindromicSubsequences(self, s: str) -> int:
-        MOD=10**9+7
+        MOD = 10**9 + 7
         """
         1. s[i] == s[j]
             例: acbca
@@ -38,30 +39,34 @@ class Solution:
             dp[i][j] = dp[i+1][j] + dp[i][j-1] + dp[i+1][j-1]
         """
         n = len(s)
+
         @cache
-        def count(i,j,c):
-            while i <= j and s[i] != c: i+=1
-            while i <= j and s[j] != c: j-=1
-            return i,j
+        def count(i, j, c):
+            while i <= j and s[i] != c:
+                i += 1
+            while i <= j and s[j] != c:
+                j -= 1
+            return i, j
+
         @cache
-        def dfs(i,j):
+        def dfs(i, j):
             # print("dfs",i,j)
             if i > j:
                 return 0
             if i == j:
                 return 1
             if s[i] == s[j]:
-                l,r = count(i+1,j-1,s[i])
+                l, r = count(i + 1, j - 1, s[i])
                 if l > r:
-                    return dfs(i+1,j-1)*2+2
-                elif l==r:
-                    return dfs(i+1,j-1)*2+1
+                    return dfs(i + 1, j - 1) * 2 + 2
+                elif l == r:
+                    return dfs(i + 1, j - 1) * 2 + 1
                 else:
-                    return dfs(i+1,j-1)*2-dfs(l+1,r-1)
+                    return dfs(i + 1, j - 1) * 2 - dfs(l + 1, r - 1)
             else:
-                return dfs(i+1,j) + dfs(i,j-1) - dfs(i+1,j-1)
-        return dfs(0,n-1) % MOD
+                return dfs(i + 1, j) + dfs(i, j - 1) - dfs(i + 1, j - 1)
 
+        return dfs(0, n - 1) % MOD
 
 
 # @lc code=end
