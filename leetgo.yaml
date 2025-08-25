@@ -12,9 +12,9 @@ code:
   # Available attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful
   # (Most questions have descriptive slugs, but some consist of random characters. The SlugIsMeaningful boolean indicates whether a slug is meaningful.)
   # Available functions: lower, upper, trim, padWithZero, toUnderscore, group.
-  filename_template: '{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
+  filename_template: "{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}"
   # Generate question description into a separate question.md file, otherwise it will be embed in the code file.
-  separate_description_file: true
+  separate_description_file: false
   # Default modifiers for all languages.
   modifiers:
     - name: removeUselessComments
@@ -59,7 +59,7 @@ contest:
   # Base directory to put generated contest questions.
   out_dir: contest
   # Template to generate filename of the question.
-  filename_template: '{{ .ContestShortSlug }}/{{ .Id }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}'
+  filename_template: "{{ .ContestShortSlug }}/{{ .Id }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}"
   # Open the contest page in browser after generating.
   open_in_browser: true
 # Editor settings to open generated files.

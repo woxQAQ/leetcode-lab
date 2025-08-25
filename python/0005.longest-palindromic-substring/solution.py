@@ -2,7 +2,7 @@
 # leetgo: 1.4.15
 # https://leetcode.cn/problems/longest-palindromic-substring/
 
-from math import inf
+from math import exp, inf
 from typing import *
 from leetgo_py import *
 from functools import cache
@@ -11,37 +11,25 @@ from functools import cache
 
 class Solution:
     def longestPalindrome(self, s: str) -> str:
-        """
-
-        """
-        # @cache
-        # def dfs(i,j):
-        #     if i == j:
-        #         return True
-        #     if j == i+1:
-        #         return s[i]==s[j]
-        #     return s[i]==s[j] and dfs(i+1,j-1)
-        n=len(s)
-        l,r = 0,0
-        # for i in range(n):
-        #     for j in range(i+1,n):
-        #         if dfs(i,j) and j-i>r-l:
-        #             l,r = i,j
-        # dfs.cache_clear()
-        dp = [[False] * n for _ in range(n)]
-
-        for i in range(n):
-            dp[i][i] = True
-
-        for i in range(n,-1,-1):
-            for j in range(i+1,n):
-                if j == i+1:
-                    dp[i][j] = s[i]==s[j]
-                else:
-                    dp[i][j] = s[i]==s[j] and dp[i+1][j-1]
-                if dp[i][j] and j-i>r-l:
-                    l,r = i,j
+        @cache
+        def expand_around_center(l,r):
+            while l >= 0 and l < len(s) and r >= 0 and r < len(s) and s[l] == s[r]:
+                l -= 1
+                r += 1
+            return l+1,r-1
+        if not s:
+            return ""
+        l, r = 0,0
+        for i in range(len(s)):
+            l1,r1=expand_around_center(i,i)
+            l2,r2=expand_around_center(i,i+1)
+            if r1-l1 > r-l:
+                l,r=l1,r1
+            if r2-l2 > r-l:
+                l,r=l2,r2
         return s[l:r+1]
+
+
 # @lc code=end
 
 if __name__ == "__main__":

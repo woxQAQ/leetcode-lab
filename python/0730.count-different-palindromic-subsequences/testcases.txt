@@ -1,0 +1,9 @@
+input:
+"bccb"
+output:
+6
+
+input:
+"abcdabcdabcdabcdabcdabcdabcdabcddcbadcbadcbadcbadcbadcbadcbadcba"
+output:
+104860361
