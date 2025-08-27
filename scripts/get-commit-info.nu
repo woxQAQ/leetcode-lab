@@ -4,13 +4,14 @@ def main [] {
     mut output = [$"Solution Update: ($current_time)"]
 
     let git_status = (git status --porcelain | lines)
+    mut seen_problems = []
 
     for line in $git_status {
-        let parts = ($line | split row ' ')
+        let parts = ($line | split row ' ' | where { |part| $part != "" })
         let status = $parts.0
         let path = $parts.1
 
-        if ($status == "??") or ($status == "M") {
+        if ($status == "??") or ($status == "M") or ($status == "A") {
             let path_parts = ($path | split row '/')
             if ($path_parts | length) < 2 {
                 continue
@@ -28,10 +29,18 @@ def main [] {
                 continue
             }
 
+            let problem_key = $"($problem_number): ($problem_name)"
+            if ($problem_key in $seen_problems) {
+                continue
+            }
+            $seen_problems = ($seen_problems | append [$problem_key])
+
             if $status == "??" {
                 $output = ($output | append [$"Pick LeetCode.($problem_number): ($problem_name)"])
             } else if $status == "M" {
                 $output = ($output | append [$"Modify Solution LeetCode.($problem_number): ($problem_name)"])
+            } else if $status == "A" {
+                $output = ($output | append [$"Pick LeetCode.($problem_number): ($problem_name)"])
             }
         }
     }
