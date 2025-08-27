@@ -1,11 +1,11 @@
 CURRENT_TIME:=$(shell date "+%Y-%m-%d %H:%M:%S")
 
-COMMIT_INFO:=$(shell nu scripts/get-commit-info.nu | awk '{printf "%s\\n", $$0}' ORS='')
+COMMIT_INFO:=$(shell nu scripts/get-commit-info.nu)
 
 .PHONY: commit
 commit:
 	echo "stage and commit"
 	@git add .
-	@git commit -m "${COMMIT_INFO}"
+	@git commit -m "$$(nu scripts/get-commit-info.nu)"
 	echo "push to origin..."
 	@git push
