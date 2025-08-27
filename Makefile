@@ -1,6 +1,6 @@
 CURRENT_TIME:=$(shell date "+%Y-%m-%d %H:%M:%S")
 
-COMMIT_INFO:=$(shell nu scripts/get-commit-info.nu)
+COMMIT_INFO:=$(shell nu scripts/get-commit-info.nu | awk '{printf "%s\\n", $$0}' ORS='')
 
 .PHONY: commit
 commit:
