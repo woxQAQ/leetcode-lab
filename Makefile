@@ -4,8 +4,8 @@ COMMIT_INFO:=$(shell nu scripts/get-commit-info.nu)
 
 .PHONY: commit
 commit:
-	echo "stage and commit"
+	@echo "stage and commit"
 	@git add .
 	@git commit -m "$$(nu scripts/get-commit-info.nu)"
-	echo "push to origin..."
+	@echo "push to origin..."
 	@git push
