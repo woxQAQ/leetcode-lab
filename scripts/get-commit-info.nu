@@ -3,13 +3,16 @@ def main [] {
     let current_time = (date now | format date "%Y-%m-%d %H:%M:%S")
     mut output = [$"Solution Update: ($current_time)"]
 
-    let git_status = (git status --porcelain | lines | where { |line| not ($line | str starts-with "scripts/") })
+    let git_status = (git status --porcelain | lines )
     mut seen_problems = []
 
     for line in $git_status {
         let parts = ($line | split row ' ' | where { |part| $part != "" })
         let status = $parts.0
         let path = $parts.1
+        if ($path | str starts-with "scripts") {
+            continue
+        }
 
         if ($status == "??") or ($status == "M") or ($status == "A") {
             let path_parts = ($path | split row '/')
