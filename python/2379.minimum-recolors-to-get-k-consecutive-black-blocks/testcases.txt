@@ -1,0 +1,11 @@
+input:
+"WBBWWBBWBW"
+7
+output:
+3
+
+input:
+"WBWBBBW"
+2
+output:
+0

@@ -1,0 +1,34 @@
+def main [] {
+    let current_time = (date now | format date "%Y-%m-%d %H:%M:%S")
+    print $"Solution Update: ($current_time)"
+    
+    let git_status = (git status --porcelain | lines)
+    
+    for line in $git_status {
+        let parts = ($line | split row ' ')
+        let status = $parts.0
+        let path = $parts.1
+        
+        if ($status == "??") or ($status == "M") {
+            let path_parts = ($path | split row '/')
+            let problem_folder = $path_parts.1
+            let problem_parts = ($problem_folder | split row '.')
+            let problem_number = $problem_parts.0
+            let problem_name = if ($problem_parts | length) > 1 {
+                ($problem_parts.1 | split row '-' | str join ' ')
+            } else {
+                ""  # Skip invalid entries
+            }
+            
+            if ($problem_name == "") {
+                continue
+            }
+            
+            if $status == "??" {
+                print $"Pick LeetCode.($problem_number): ($problem_name)"
+            } else if $status == "M" {
+                print $"Modify Solution LeetCode.($problem_number): ($problem_name)"
+            }
+        }
+    }
+}
