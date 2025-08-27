@@ -1,0 +1,17 @@
+input:
+"TTFF"
+2
+output:
+4
+
+input:
+"TFFT"
+1
+output:
+3
+
+input:
+"TTFTTFTT"
+1
+output:
+5
