@@ -6,6 +6,6 @@ COMMIT_INFO:=$(shell nu scripts/get-commit-info.nu)
 commit:
 	@echo "stage and commit"
 	@git add .
-	@git commit -m "$$(nu scripts/get-commit-info.nu)"
+	@git commit -m "$(COMMIT_INFO)"
 	@echo "push to origin..."
 	@git push

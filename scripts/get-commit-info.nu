@@ -3,7 +3,7 @@ def main [] {
     let current_time = (date now | format date "%Y-%m-%d %H:%M:%S")
     mut output = [$"Solution Update: ($current_time)"]
 
-    let git_status = (git status --porcelain | lines)
+    let git_status = (git status --porcelain | lines | where { |line| not ($line | str starts-with "scripts/") })
     mut seen_problems = []
 
     for line in $git_status {
