@@ -48,5 +48,5 @@ def main [] {
         }
     }
 
-    $output | str join "\n"
+    $output | str join "\n\n"
 }
