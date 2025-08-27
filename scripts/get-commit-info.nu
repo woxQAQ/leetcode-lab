@@ -1,7 +1,7 @@
 #!/usr/bin/env nu
 def main [] {
     let current_time = (date now | format date "%Y-%m-%d %H:%M:%S")
-    print $"Solution Update: ($current_time)"
+    mut output = [$"Solution Update: ($current_time)"]
 
     let git_status = (git status --porcelain | lines)
 
@@ -29,10 +29,12 @@ def main [] {
             }
 
             if $status == "??" {
-                print $"Pick LeetCode.($problem_number): ($problem_name)"
+                $output = ($output | append [$"Pick LeetCode.($problem_number): ($problem_name)"])
             } else if $status == "M" {
-                print $"Modify Solution LeetCode.($problem_number): ($problem_name)"
+                $output = ($output | append [$"Modify Solution LeetCode.($problem_number): ($problem_name)"])
             }
         }
     }
+
+    $output | str join "\n"
 }
