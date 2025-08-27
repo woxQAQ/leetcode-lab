@@ -44,14 +44,27 @@
 
 """
 
+from math import inf
 from typing import *
 from leetgo_py import *
 
 # @lc code=begin
 
+
 class Solution:
     def minimumRecolors(self, blocks: str, k: int) -> int:
-        
+        ans = inf
+        count = 0
+        for i, block in enumerate(blocks):
+            if block == "W":
+                count += 1
+            if i < k - 1:
+                continue
+            ans = min(ans, count)
+            if blocks[i - k + 1] == "W":
+                count -= 1
+        return ans
+
 
 # @lc code=end
 

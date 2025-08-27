@@ -11,6 +11,9 @@ def main [] {
         
         if ($status == "??") or ($status == "M") {
             let path_parts = ($path | split row '/')
+            if ($path_parts | length) < 2 {
+                continue
+            }
             let problem_folder = $path_parts.1
             let problem_parts = ($problem_folder | split row '.')
             let problem_number = $problem_parts.0
