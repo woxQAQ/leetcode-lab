@@ -14,7 +14,7 @@ code:
   # Available functions: lower, upper, trim, padWithZero, toUnderscore, group.
   filename_template: "{{ .Id | padWithZero 4 }}{{ if .SlugIsMeaningful }}.{{ .Slug }}{{ end }}"
   # Generate question description into a separate question.md file, otherwise it will be embed in the code file.
-  separate_description_file: false
+  separate_description_file: true
   # Default modifiers for all languages.
   modifiers:
     - name: removeUselessComments
