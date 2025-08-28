@@ -28,36 +28,27 @@ const (
 
 var systemPrompt = `你是一个文本处理高手，你擅长在长文本中提取出符合任务要求的内容。请你在 <text></text> 包裹的文本中完成下列任务
 
-1. 这是一份 LeetCode 题单，请你将其中特征为 ${题号}. ${题名} 的字符串按照题目的标签提取到若干个 csv 文件中
+1. 这是一份 LeetCode 题单，请你将其中特征为 ${题号}. ${题名} 的字符串按照顺序规范化输出到一份markdown文档中
 2. 忽略含有后缀 (会员题）的题目
 3. 忽略题名后的数字和一些提示
-4. 输出结果为若干个 csv 数据，通过 json 格式组织起来。你只需要输出一个 json 字符串即可.json的格式为
+4. 保留原始文档对于每个专题的提示，保留原始文档的拓扑结构，转化为标准的markdown语法
 
-{
-	"csv_datas": [
-		{
-			"file_name": "name",
-			"content": "content"
-		}
-	]
-}
+规范化的规则是为题目增加 TODO 标识
 
-csv 的格式为:
-
-题号,题目名称
-0,....
+比如，0001. 两数之和，需要转化为
+- [ ] 0001. 两数之和
 `
 
 var userPromptTemplate = `<text> {{ .content }} </text>`
 
-type output struct {
+type csvoutput struct {
 	CsvDatas []struct {
 		FileName string `json:"file_name"`
 		Content  string `json:"content"`
 	} `json:"csv_datas"`
 }
 
-func (o *output) Output(outDir string) error {
+func (o *csvoutput) Output(outDir string) error {
 	for _, csvdata := range o.CsvDatas {
 		outPath := path.Join(outDir, csvdata.FileName)
 		f, err := os.Create(outPath)
@@ -124,7 +115,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGKILL)
 	defer cancel()
 
-	r, err := prepareIO(datasource, outdir)
+	r, err := prepareIO(datasource)
 	if err != nil {
 		log.Fatalf("Error preparing IO: %v", err)
 	}
@@ -165,11 +156,32 @@ func main() {
 		log.Fatalf("Error calling OpenAI API: %v", err)
 	}
 
-	output := extractOutput(chat.Choices[0].Message.Content)
-	err = output.Output(outdir)
+	// output := extractOutput[string](chat.Choices[0].Message.Content)
+	output := chat.Choices[0].Message.Content
+	outputMarkdown(output, outdir)
+
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func outputMarkdown(output, outDir string) error {
+	output = strings.TrimPrefix(output, "```markdown")
+	output = strings.TrimSuffix(output, "```")
+	outPath := path.Join(outDir, "output.md")
+	f, err := os.Create(outPath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	n, err := f.Write([]byte(output))
+	if err != nil {
+		return err
+	}
+	if n != len(output) {
+		return fmt.Errorf("write %d bytes, expected %d", n, len(output))
+	}
+	return nil
 }
 
 func read(r io.Reader) ([]byte, error) {
@@ -180,7 +192,7 @@ func read(r io.Reader) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func prepareIO(in, out string) (io.ReadCloser, error) {
+func prepareIO(in string) (io.ReadCloser, error) {
 	var r io.ReadCloser
 	if in == "stdin" {
 		r = os.Stdin
@@ -195,11 +207,11 @@ func prepareIO(in, out string) (io.ReadCloser, error) {
 	return r, nil
 }
 
-func extractOutput(jsonstr string) output {
+func extractOutput[T any](jsonstr string) T {
 	jsonstr = strings.TrimPrefix(jsonstr, "```json")
 	jsonstr = strings.TrimSuffix(jsonstr, "```")
 	jsonstr = strings.TrimSpace(jsonstr)
-	var data output
+	var data T
 	err := json.Unmarshal([]byte(jsonstr), &data)
 	if err != nil {
 		log.Fatalf("Error parsing JSON: %v", err)
