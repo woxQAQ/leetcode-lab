@@ -1,0 +1,17 @@
+input:
+["c","f","j"]
+"a"
+output:
+"c"
+
+input:
+["c","f","j"]
+"c"
+output:
+"f"
+
+input:
+["x","x","y","y"]
+"z"
+output:
+"x"

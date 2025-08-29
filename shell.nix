@@ -14,7 +14,7 @@ pkgs.mkShell {
     echo "📝 Available commands:"
     echo "   lpick <qid>    - Pick a LeetCode problem (leetgo pick <qid>)"
     echo "   ltest          - Test the last problem (leetgo test last)"
-    echo "   lsubmit        - Submit the last problem (leetgo submit last)"
+    echo "   lpush          - Submit the last problem (leetgo submit last)"
     echo ""
 
     # Install leetgo if not already installed
@@ -37,11 +37,11 @@ pkgs.mkShell {
       leetgo test last
     }
 
-    lsubmit() {
+    lpush() {
       leetgo submit last
     }
 
     # Export functions to make them available in subshells
-    export -f lpick ltest lsubmit
+    export -f lpick ltest lpush
   '';
 }
