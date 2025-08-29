@@ -1,0 +1,17 @@
+input:
+"10101"
+1
+output:
+12
+
+input:
+"1010101"
+2
+output:
+25
+
+input:
+"11111"
+1
+output:
+15
