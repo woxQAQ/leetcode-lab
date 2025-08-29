@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -14,10 +13,12 @@ import (
 	"strings"
 	"syscall"
 	"text/template"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -69,29 +70,18 @@ func (o *csvoutput) Output(outDir string) error {
 
 var (
 	datasource string
-	outdir     string
+	output     string
+	timeout    int
 	baseUrl    string
 	apiKey     string
 	model      string
 )
 
-func init() {
-	flag.StringVar(&datasource, "datasource", "stdin", "")
-	flag.StringVar(&outdir, "outdir", "out", "")
-	if info, err := os.Stat(outdir); err != nil {
-		if os.IsNotExist(err) {
-			err = os.Mkdir(outdir, 0o755)
-			if err != nil {
-				log.Fatalf("Error creating output directory: %v", err)
-			}
-		} else {
-			log.Fatalf("Error checking output directory: %v", err)
-		}
-	} else if !info.IsDir() {
-		log.Fatalf("Output directory is not a directory")
+func validateEnvironment() {
+	if output == "" {
+		log.Fatal("Output path cannot be empty")
 	}
-	// 检查环境变量
-	// 加载 .env 文件
+	
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Warning: .env file not found, using environment variables")
@@ -111,26 +101,26 @@ func init() {
 	}
 }
 
-func main() {
+func runExtract() error {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGKILL)
 	defer cancel()
 
 	r, err := prepareIO(datasource)
 	if err != nil {
-		log.Fatalf("Error preparing IO: %v", err)
+		return fmt.Errorf("Error preparing IO: %v", err)
 	}
 
 	defer r.Close()
 
-	content, err := read(r)
+	content, err := read(ctx, r)
 	if err != nil {
-		log.Fatalf("Error reading from stdin: %v", err)
+		return fmt.Errorf("Error reading from stdin: %v", err)
 	}
 
 	// 执行模板
 	tpl, err := template.New("user_prompt").Parse(userPromptTemplate)
 	if err != nil {
-		log.Fatalf("Error parsing template: %v", err)
+		return fmt.Errorf("Error parsing template: %v", err)
 	}
 
 	buf := bytes.Buffer{}
@@ -138,7 +128,7 @@ func main() {
 		"content": string(content),
 	})
 	if err != nil {
-		log.Fatalf("Error executing template: %v", err)
+		return fmt.Errorf("Error executing template: %v", err)
 	}
 
 	// 创建OpenAI客户端
@@ -153,23 +143,56 @@ func main() {
 		Model: model,
 	})
 	if err != nil {
-		log.Fatalf("Error calling OpenAI API: %v", err)
+		return fmt.Errorf("Error calling OpenAI API: %v", err)
 	}
 
 	// output := extractOutput[string](chat.Choices[0].Message.Content)
 	output := chat.Choices[0].Message.Content
-	outputMarkdown(output, outdir)
+	return outputMarkdown(output, output)
+}
 
-	if err != nil {
+func main() {
+	var rootCmd = &cobra.Command{
+		Use:   "extractor",
+		Short: "LeetCode problem extractor",
+		Long:  `A tool to extract LeetCode problems from input text and generate markdown output.
+		
+Examples:
+  extractor                                    # Read from stdin, output to output.md
+  extractor -d input.txt                      # Read from input.txt, output to output.md
+  extractor -o results.md                     # Read from stdin, output to results.md
+  extractor -d input.txt -o results/leetcode.md # Read from input.txt, output to results/leetcode.md`,
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			validateEnvironment()
+			if err := runExtract(); err != nil {
+				log.Fatal(err)
+			}
+		},
+	}
+
+	rootCmd.Flags().StringVarP(&datasource, "datasource", "d", "stdin", "Source of input data (default: stdin)")
+	rootCmd.Flags().StringVarP(&output, "output", "o", "output.md", "Output file path (default: output.md)")
+	rootCmd.Flags().IntVarP(&timeout, "timeout", "t", 30, "Timeout in seconds for stdin input (default: 30)")
+
+	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func outputMarkdown(output, outDir string) error {
+func outputMarkdown(output, outputPath string) error {
 	output = strings.TrimPrefix(output, "```markdown")
 	output = strings.TrimSuffix(output, "```")
-	outPath := path.Join(outDir, "output.md")
-	f, err := os.Create(outPath)
+	
+	// Create directory if it doesn't exist
+	dir := path.Dir(outputPath)
+	if dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return fmt.Errorf("Error creating output directory: %v", err)
+		}
+	}
+	
+	f, err := os.Create(outputPath)
 	if err != nil {
 		return err
 	}
@@ -184,12 +207,31 @@ func outputMarkdown(output, outDir string) error {
 	return nil
 }
 
-func read(r io.Reader) ([]byte, error) {
+func read(ctx context.Context, r io.Reader) ([]byte, error) {
 	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, r); err != nil {
-		return nil, err
+	done := make(chan struct{})
+	timeoutCtx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	go func() {
+		_, err := io.Copy(&buf, r)
+		if err != nil {
+			select {
+			case <-timeoutCtx.Done():
+				return
+			default:
+				// Let the context handle the error
+			}
+		}
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		return buf.Bytes(), nil
+	case <-timeoutCtx.Done():
+		return nil, fmt.Errorf("stdin input timed out after %d seconds", timeout)
 	}
-	return buf.Bytes(), nil
 }
 
 func prepareIO(in string) (io.ReadCloser, error) {
