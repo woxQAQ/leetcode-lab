@@ -147,8 +147,8 @@ func runExtract() error {
 	}
 
 	// output := extractOutput[string](chat.Choices[0].Message.Content)
-	output := chat.Choices[0].Message.Content
-	return outputMarkdown(output, output)
+	markdownContent := chat.Choices[0].Message.Content
+	return outputMarkdown(markdownContent, output)
 }
 
 func main() {
@@ -180,9 +180,9 @@ Examples:
 	}
 }
 
-func outputMarkdown(output, outputPath string) error {
-	output = strings.TrimPrefix(output, "```markdown")
-	output = strings.TrimSuffix(output, "```")
+func outputMarkdown(content, outputPath string) error {
+	content = strings.TrimPrefix(content, "```markdown")
+	content = strings.TrimSuffix(content, "```")
 	
 	// Create directory if it doesn't exist
 	dir := path.Dir(outputPath)
@@ -197,12 +197,12 @@ func outputMarkdown(output, outputPath string) error {
 		return err
 	}
 	defer f.Close()
-	n, err := f.Write([]byte(output))
+	n, err := f.Write([]byte(content))
 	if err != nil {
 		return err
 	}
-	if n != len(output) {
-		return fmt.Errorf("write %d bytes, expected %d", n, len(output))
+	if n != len(content) {
+		return fmt.Errorf("write %d bytes, expected %d", n, len(content))
 	}
 	return nil
 }
