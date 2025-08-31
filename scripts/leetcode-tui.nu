@@ -25,7 +25,7 @@ def main [] {
         print ""
         
         print $"(ansi cyan)Main Menu:(ansi reset)"
-        print "1. Pick new problem (lpick)"
+        print "1. Pick new problem (enter problem number)"
         print "2. Test current solution (ltest)"
         print "3. Push solution (lpush)"
         print "4. Commit and push all solutions"
@@ -98,14 +98,27 @@ def main [] {
     }
 }
 
-# Pick a new problem using lpick
+# Pick a problem by direct number input
 def pick-problem [] {
-    print $"(ansi blue)Picking new problem...(ansi reset)"
+    print $"(ansi blue)Problem Selection...(ansi reset)"
+    print "Enter the LeetCode problem number you want to solve."
+    print "Examples: 1, 2, 15, 1642, etc."
+    print ""
+    
+    let problem_number = (input "Enter LeetCode problem number: ")
+    
+    if ($problem_number | str trim) == "" {
+        print $"(ansi red)Error: Problem number cannot be empty.(ansi reset)"
+        return
+    }
+    
     try {
-        ^lpick
-        print $"(ansi green)Problem picked successfully!(ansi reset)"
+        # Run lpick with the specific problem number
+        ^lpick $problem_number
+        print $"(ansi green)Problem ($problem_number) picked successfully!(ansi reset)"
     } catch { |e|
-        print $"(ansi red)Error picking problem: ($e.msg)(ansi reset)"
+        print $"(ansi red)Error picking problem ($problem_number): ($e.msg)(ansi reset)"
+        print "Please check if the problem number exists."
     }
 }
 
