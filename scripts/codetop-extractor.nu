@@ -33,7 +33,7 @@ const tag_to_label = {
     "35": "Random",
 }
 
-def main [tag?: int, --all, --output-dir: string] {
+def main [tag?: int, --all, --output-dir: string = "dist"] {
     # 处理 --all flag
     if $all {
         print "正在获取所有标签的题目列表..."
