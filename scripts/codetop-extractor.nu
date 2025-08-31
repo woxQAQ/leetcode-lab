@@ -33,7 +33,14 @@ const tag_to_label = {
     "35": "Random",
 }
 
-def main [tag?: int] {
+def main [tag?: int, --all, --output-dir: string] {
+    # 处理 --all flag
+    if $all {
+        print "正在获取所有标签的题目列表..."
+        process-all-tags $output_dir
+        return
+    }
+
     let page = 1
 
     # 如果没有提供tag参数，则显示交互式选择
@@ -59,7 +66,13 @@ def main [tag?: int] {
         exit 1
     }
 
-    let tag = $selected_tag
+    # 处理单个标签
+    process-single-tag $selected_tag $output_dir
+}
+
+# 处理单个标签的函数
+def process-single-tag [tag: int, output_dir?: string] {
+    let page = 1
     let url = $"https://codetop.cc/api/questions/?page=($page)&search=&ordering=-frequency&leetcode__tags=($tag)"
     mut page_count = 0
     let token = "0012e89acd6812aa9f3ab8807429a36fa996049b"
@@ -77,9 +90,51 @@ def main [tag?: int] {
     let tag_label = $tag_to_label | get $"($tag)"
 
     let template = $"---
-description: leetcode problem from codetop - ($tag_label)
----
-($problem_meta | each { |item| $'- [ ] ($item.id).($item.leetcode.title)' } | str join (char nl))"
+description: leetcode problem from codetop
+label: ($tag_label)
 
-    $template
+($problem_meta | each { |item| $'- [ ] ($item.value).($item.leetcode.title)' } | str join (char nl))"
+
+    # 如果指定了输出目录，保存到文件
+    if $output_dir != null {
+        let tag_name = ($tag_label | str downcase | str replace " " "-")
+        let filename = $"($output_dir)/($tag_name).md"
+        ensure-output-dir $output_dir
+        $template | save --force $filename
+        print $"题目列表已保存到: ($filename)"
+    } else {
+        $template
+    }
+}
+
+# 处理所有标签的函数
+def process-all-tags [output_dir?: string] {
+    # 确定输出目录
+    let final_output_dir = if $output_dir != null {
+        $output_dir
+    } else {
+        "dist"
+    }
+
+    ensure-output-dir $final_output_dir
+
+    print $"输出目录: ($final_output_dir)"
+
+    # 遍历所有标签
+    let tag_keys = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 31, 35]
+    for key in $tag_keys {
+        let value = ($tag_to_label | get $"($key)")
+        print $"Processing: ($value) - tag ($key)"
+        process-single-tag $key $final_output_dir
+    }
+
+    print "所有标签的题目列表处理完成!"
+}
+
+# 确保输出目录存在的函数
+def ensure-output-dir [dir: string] {
+    if not ($dir | path exists) {
+        mkdir $dir
+        print $"创建目录: ($dir)"
+    }
 }

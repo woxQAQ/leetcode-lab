@@ -9,3 +9,7 @@ commit:
 	@nu scripts/get-commit-info.nu | xargs -0 git commit -m
 	@echo "push to origin..."
 	@git push
+
+.PHONY: extractor-codetop
+extractor-codetop:
+	@nu scripts/codetop-extractor.nu
