@@ -1,0 +1,14 @@
+input:
+[3,5,2,4]
+output:
+2
+
+input:
+[9,2,5,4]
+output:
+4
+
+input:
+[7,6,8]
+output:
+0
