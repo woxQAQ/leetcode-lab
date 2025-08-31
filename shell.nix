@@ -1,4 +1,6 @@
-{ pkgs ? import <nixpkgs> {} }:
+{
+  pkgs ? import <nixpkgs> { },
+}:
 
 pkgs.mkShell {
   name = "leetcode-shell";
@@ -7,6 +9,20 @@ pkgs.mkShell {
     # Go is required for leetgo
     leetgo
     python3
+    (writeShellScriptBin "ltest" ''
+      ${pkgs.leetgo}/bin/leetgo test last
+    '')
+    (writeShellScriptBin "lpush" ''
+      ${pkgs.leetgo}/bin/leetgo submit last
+    '')
+    (writeShellScriptBin "lpick" ''
+      if [ -z "$1" ]; then
+        echo "❌ Please provide a question ID"
+        echo "Usage: lpick <qid>"
+        return 1
+      fi
+      ${pkgs.leetgo}/bin/leetgo pick "$1"
+    '')
   ];
 
   shellHook = ''
@@ -17,31 +33,6 @@ pkgs.mkShell {
     echo "   lpush          - Submit the last problem (leetgo submit last)"
     echo ""
 
-    # Install leetgo if not already installed
-    if ! command -v leetgo &> /dev/null; then
-      echo "📦 Installing leetgo..."
-      go install github.com/j178/leetgo@latest
-    fi
-
-    # Create custom commands
-    lpick() {
-      if [ -z "$1" ]; then
-        echo "❌ Please provide a question ID"
-        echo "Usage: lpick <qid>"
-        return 1
-      fi
-      leetgo pick "$1"
-    }
-
-    ltest() {
-      leetgo test last
-    }
-
-    lpush() {
-      leetgo submit last
-    }
-
-    # Export functions to make them available in subshells
-    export -f lpick ltest lpush
+    exec ${pkgs.zsh}/bin/zsh
   '';
 }

@@ -92,8 +92,8 @@ def process-single-tag [tag: int, output_dir?: string] {
     let template = $"---
 description: leetcode problem from codetop
 label: ($tag_label)
-
-($problem_meta | each { |item| $'- [ ] ($item.value).($item.leetcode.title)' } | str join (char nl))"
+---
+($problem_meta | each { |item| $'- [ ] ($item.leetcode.question_id).($item.leetcode.title)' } | str join (char nl))"
 
     # 如果指定了输出目录，保存到文件
     if $output_dir != null {
