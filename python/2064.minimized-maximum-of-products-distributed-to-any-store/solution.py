@@ -7,9 +7,18 @@ from leetgo_py import *
 
 # @lc code=begin
 
+
 class Solution:
     def minimizedMaximum(self, n: int, quantities: List[int]) -> int:
-        
+        l, r = 0, max(quantities)
+        while l < r - 1:
+            mid = (l + r) // 2
+            if sum((quantitiy + mid - 1) // mid for quantitiy in quantities) <= n:
+                r = mid
+            else:
+                l = mid
+        return r
+
 
 # @lc code=end
 
