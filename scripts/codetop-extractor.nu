@@ -1,5 +1,38 @@
 #!/usr/bin/env nu
 
+# Load environment variables from .env file if it exists
+def load-env [] {
+    let env_file = ".env"
+    if ($env_file | path exists) {
+        let env_content = (open $env_file | lines)
+        mut env_vars = {}
+        for line in $env_content {
+            let line = ($line | str trim)
+            if ($line != "") and not ($line | str starts-with "#") {
+                let parts = ($line | split row "=")
+                if ($parts | length) == 2 {
+                    let key = ($parts | get 0 | str trim)
+                    let value = ($parts | get 1 | str trim)
+                    # Remove quotes if present
+                    let value = if ($value | str starts-with "'") and ($value | str ends-with "'") {
+                        $value | str substring 1..-2
+                    } else if ($value | str starts-with '"') and ($value | str ends-with '"') {
+                        $value | str substring 1..-2
+                    } else {
+                        $value
+                    }
+                    # Add to environment variables
+                    $env_vars = ($env_vars | merge { $key: $value })
+                }
+            }
+        }
+        # Load all environment variables at once
+        if ($env_vars | length) > 0 {
+            load-env $env_vars
+        }
+    }
+}
+
 const tag_to_label = {
     "1": "Hash Table",
     "2": "Array",
@@ -34,10 +67,21 @@ const tag_to_label = {
 }
 
 def main [tag?: int, --all, --output-dir: string = "dist"] {
+    # Load environment variables
+    load-env
+    
+    # Get token from environment variable
+    let token = ($env.CODETOP_TOKEN? | default "")
+    if $token == "" {
+        print "Error: CODETOP_TOKEN environment variable is not set"
+        print "Please set it in your environment or in a .env file:"
+        print "CODETOP_TOKEN=your_token_here"
+        exit 1
+    }
     # 处理 --all flag
     if $all {
         print "正在获取所有标签的题目列表..."
-        process-all-tags $output_dir
+        process-all-tags $output_dir $token
         return
     }
 
@@ -67,15 +111,14 @@ def main [tag?: int, --all, --output-dir: string = "dist"] {
     }
 
     # 处理单个标签
-    process-single-tag $selected_tag $output_dir
+    process-single-tag $selected_tag $output_dir $token
 }
 
 # 处理单个标签的函数
-def process-single-tag [tag: int, output_dir?: string] {
+def process-single-tag [tag: int, output_dir?: string, token: string] {
     let page = 1
     let url = $"https://codetop.cc/api/questions/?page=($page)&search=&ordering=-frequency&leetcode__tags=($tag)"
     mut page_count = 0
-    let token = "0012e89acd6812aa9f3ab8807429a36fa996049b"
     let response = http get $url -H {Authorization: $'Token ($token)'}
     let all_count = $response.count
     $page_count += $response.list | length
@@ -108,7 +151,7 @@ label: ($tag_label)
 }
 
 # 处理所有标签的函数
-def process-all-tags [output_dir?: string] {
+def process-all-tags [output_dir?: string, token: string] {
     # 确定输出目录
     let final_output_dir = if $output_dir != null {
         $output_dir
@@ -125,7 +168,7 @@ def process-all-tags [output_dir?: string] {
     for key in $tag_keys {
         let value = ($tag_to_label | get $"($key)")
         print $"Processing: ($value) - tag ($key)"
-        process-single-tag $key $final_output_dir
+        process-single-tag $key $final_output_dir $token
     }
 
     print "所有标签的题目列表处理完成!"
