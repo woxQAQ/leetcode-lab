@@ -36,12 +36,11 @@ def main [] {
         print "3. Push solution (lpush)"
         print "4. Commit and push all solutions"
         print "5. View git status"
-        print "6. Open IDE (code .)"
-        print "7. Extract CodeTop problems"
-        print "8. Exit"
+        print "6. Extract CodeTop problems"
+        print "7. Exit"
         print ""
         
-        let choice = (input "Enter your choice (1-8): ")
+        let choice = (input "Enter your choice (1-7): ")
         
         match $choice {
             "1" => {
@@ -88,14 +87,10 @@ def main [] {
                 $last_action = "Viewed git status"
             }
             "6" => {
-                open-ide
-                $last_action = "Opened IDE"
-            }
-            "7" => {
                 extract-codetop
                 $last_action = "Extracted CodeTop problems"
             }
-            "8" => {
+            "7" => {
                 print $"(ansi green)Goodbye!(ansi reset)"
                 exit 0
             }
@@ -106,7 +101,7 @@ def main [] {
         }
         
         # Only show "Press Enter to continue" if not exiting
-        if $choice != "8" {
+        if $choice != "7" {
             print ""
             print "Press Enter to continue..."
             input
@@ -260,16 +255,6 @@ def show-git-status [] {
     }
 }
 
-# Open IDE (VS Code)
-def open-ide [] {
-    print $"(ansi blue)Opening IDE...(ansi reset)"
-    try {
-        ^code .
-        print $"(ansi green)IDE opened successfully!(ansi reset)"
-    } catch { |e|
-        print $"(ansi red)Error opening IDE: ($e.msg)(ansi reset)"
-    }
-}
 
 # Extract CodeTop problems
 def extract-codetop [] {
