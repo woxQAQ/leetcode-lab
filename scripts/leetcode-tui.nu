@@ -21,7 +21,13 @@ def main [] {
             print "No problem selected"
         }
         print $"Last action: ($last_action)"
-        print $"Workflow state: ($workflow_state)"
+        
+        # Display workflow state with color
+        if $workflow_state == "Accepted" {
+            print $"Workflow state: (ansi green)($workflow_state)(ansi reset)"
+        } else {
+            print $"Workflow state: ($workflow_state)"
+        }
         print ""
         
         print $"(ansi cyan)Main Menu:(ansi reset)"
@@ -60,9 +66,17 @@ def main [] {
                     print ""
                     continue
                 }
-                push-solution
-                $workflow_state = "pushing"
-                $last_action = "Pushed solution"
+                let push_result = (push-solution)
+                if $push_result == "Accepted" {
+                    $workflow_state = "Accepted"
+                    $last_action = "Solution Accepted! 🎉"
+                } else if $push_result == "pushed" {
+                    $workflow_state = "pushed"
+                    $last_action = "Solution pushed (not accepted)"
+                } else {
+                    $workflow_state = "error"
+                    $last_action = "Failed to push solution"
+                }
             }
             "4" => {
                 commit-all
@@ -83,7 +97,7 @@ def main [] {
             }
             "8" => {
                 print $"(ansi green)Goodbye!(ansi reset)"
-                break
+                exit 0
             }
             _ => {
                 print $"(ansi red)Invalid choice. Please try again.(ansi reset)"
@@ -91,10 +105,13 @@ def main [] {
             }
         }
         
-        print ""
-        print "Press Enter to continue..."
-        input
-        clear
+        # Only show "Press Enter to continue" if not exiting
+        if $choice != "8" {
+            print ""
+            print "Press Enter to continue..."
+            input
+            clear
+        }
     }
 }
 
@@ -202,10 +219,23 @@ def test-solution [] {
 def push-solution [] {
     print $"(ansi blue)Pushing solution...(ansi reset)"
     try {
-        ^lpush
-        print $"(ansi green)Solution pushed successfully!(ansi reset)"
+        let output = (^lpush)
+        
+        # Check if the output contains "Accepted" and format accordingly
+        if ($output | str contains "Accepted") {
+            # Replace "Accepted" with green version
+            let colored_output = ($output | str replace "Accepted" $"(ansi green)Accepted(ansi reset)")
+            print $colored_output
+            print $"(ansi green)🎉 Solution Accepted!(ansi reset)"
+            return "Accepted"
+        } else {
+            print $output
+            print $"(ansi yellow)Solution pushed but not accepted(ansi reset)"
+            return "pushed"
+        }
     } catch { |e|
         print $"(ansi red)Error pushing solution: ($e.msg)(ansi reset)"
+        return "error"
     }
 }
 
