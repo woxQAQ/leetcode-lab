@@ -206,7 +206,12 @@ def test-solution [] {
         ^ltest
         print $"(ansi green)Solution tested successfully!(ansi reset)"
     } catch { |e|
-        print $"(ansi red)Error testing solution: ($e.msg)(ansi reset)"
+        # Check if it's a non-zero exit code error
+        if ($e.msg | str contains "External command had a non-zero exit code") {
+            print $"(ansi yellow)Test failed. Please check your solution and try again.(ansi reset)"
+        } else {
+            print $"(ansi red)Error testing solution: ($e.msg)(ansi reset)"
+        }
     }
 }
 
