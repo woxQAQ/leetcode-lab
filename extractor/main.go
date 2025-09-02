@@ -81,7 +81,7 @@ func validateEnvironment() {
 	if output == "" {
 		log.Fatal("Output path cannot be empty")
 	}
-	
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Warning: .env file not found, using environment variables")
@@ -107,20 +107,20 @@ func runExtract() error {
 
 	r, err := prepareIO(datasource)
 	if err != nil {
-		return fmt.Errorf("Error preparing IO: %v", err)
+		return fmt.Errorf("error preparing IO: %v", err)
 	}
 
 	defer r.Close()
 
 	content, err := read(ctx, r)
 	if err != nil {
-		return fmt.Errorf("Error reading from stdin: %v", err)
+		return fmt.Errorf("error reading from stdin: %v", err)
 	}
 
 	// 执行模板
 	tpl, err := template.New("user_prompt").Parse(userPromptTemplate)
 	if err != nil {
-		return fmt.Errorf("Error parsing template: %v", err)
+		return fmt.Errorf("error parsing template: %v", err)
 	}
 
 	buf := bytes.Buffer{}
@@ -156,7 +156,7 @@ func main() {
 		Use:   "extractor",
 		Short: "LeetCode problem extractor",
 		Long:  `A tool to extract LeetCode problems from input text and generate markdown output.
-		
+
 Examples:
   extractor                                    # Read from stdin, output to output.md
   extractor -d input.txt                      # Read from input.txt, output to output.md
@@ -183,7 +183,7 @@ Examples:
 func outputMarkdown(content, outputPath string) error {
 	content = strings.TrimPrefix(content, "```markdown")
 	content = strings.TrimSuffix(content, "```")
-	
+
 	// Create directory if it doesn't exist
 	dir := path.Dir(outputPath)
 	if dir != "." {
@@ -191,7 +191,7 @@ func outputMarkdown(content, outputPath string) error {
 			return fmt.Errorf("Error creating output directory: %v", err)
 		}
 	}
-	
+
 	f, err := os.Create(outputPath)
 	if err != nil {
 		return err
