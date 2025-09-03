@@ -1,0 +1,11 @@
+input:
+[1,2,8,9]
+3
+output:
+18
+
+input:
+[3,3,1]
+1
+output:
+0

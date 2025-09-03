@@ -2,17 +2,75 @@
 
 # LeetCode TUI Workflow Manager
 # Provides unified interface for lpick -> IDE -> ltest -> lpush -> commit workflow
+#
+# Features:
+# - Problem selection by number
+# - Solution testing and submission
+# - Git integration for commits
+# - CodeTop problem extraction
+# - Error handling and user feedback
+
+# Handle interrupt errors consistently
+# Returns error message or exits on interrupt
+def handle-interrupt [e] {
+    match $e {
+        {msg: $msg} => {
+            if ($msg | str contains "interrupted") {
+                print $"(ansi green)Goodbye!(ansi reset)"
+                exit 0
+            }
+            return $msg
+        }
+        _ => {
+            return "Unknown error occurred"
+        }
+    }
+}
+
+# Get user input with interrupt handling
+# Exits on interrupt or error
+def get-input [prompt: string] {
+    try {
+        input $prompt
+    } catch { |e|
+        let error_msg = (handle-interrupt $e)
+        print $"(ansi red)Error: ($error_msg)(ansi reset)"
+        exit 1
+    }
+}
+
+# Get user input with interrupt handling (safe version)
+# Returns null on interrupt or error
+def get-input-safe [prompt: string] {
+    try {
+        input $prompt
+    } catch { |e|
+        let error_msg = (handle-interrupt $e)
+        print $"(ansi red)Error: ($error_msg)(ansi reset)"
+        return null
+    }
+}
 
 def main [] {
     clear
     print $"(ansi green)LeetCode TUI Workflow Manager(ansi reset)"
     print "========================================="
     print ""
-    
+
+    # Check if leetgo is available
+    if (which leetgo | is-empty) {
+        print $"(ansi red)Error: leetgo command not found.(ansi reset)"
+        print "Please install leetgo or ensure it's in your PATH."
+        print ""
+        print "Press Enter to exit..."
+        get-input ""
+        exit 1
+    }
+
     mut current_problem = (get-current-problem)
     mut last_action = ""
     mut workflow_state = if $current_problem != null { "coding" } else { "idle" }  # idle, picking, coding, testing, pushing
-    
+
     loop {
         print $"(ansi yellow)Current Status:(ansi reset)"
         if $current_problem != null {
@@ -21,7 +79,7 @@ def main [] {
             print "No problem selected"
         }
         print $"Last action: ($last_action)"
-        
+
         # Display workflow state with color
         if $workflow_state == "Accepted" {
             print $"Workflow state: (ansi green)($workflow_state)(ansi reset)"
@@ -29,7 +87,7 @@ def main [] {
             print $"Workflow state: ($workflow_state)"
         }
         print ""
-        
+
         print $"(ansi cyan)Main Menu:(ansi reset)"
         print "1. Pick new problem (enter problem number)"
         print "2. Test current solution (ltest)"
@@ -39,9 +97,9 @@ def main [] {
         print "6. Extract CodeTop problems"
         print "7. Exit"
         print ""
-        
-        let choice = (input "Enter your choice (1-7): ")
-        
+
+        let choice = (get-input "Enter your choice (1-7): ")
+
         match $choice {
             "1" => {
                 pick-problem
@@ -99,12 +157,11 @@ def main [] {
                 print ""
             }
         }
-        
+
         # Only show "Press Enter to continue" if not exiting
         if $choice != "7" {
             print ""
-            print "Press Enter to continue..."
-            input
+            get-input "Press Enter to continue..."
             clear
         }
     }
@@ -116,17 +173,17 @@ def pick-problem [] {
     print "Enter the LeetCode problem number you want to solve."
     print "Examples: 1, 2, 15, 1642, etc."
     print ""
-    
-    let problem_number = (input "Enter LeetCode problem number: ")
-    
-    if ($problem_number | str trim) == "" {
-        print $"(ansi red)Error: Problem number cannot be empty.(ansi reset)"
+
+    let problem_number = (get-input-safe "Enter LeetCode problem number: ")
+    if ($problem_number == null) or ($problem_number | str trim) == "" {
+        if $problem_number != null {
+            print $"(ansi red)Error: Problem number cannot be empty.(ansi reset)"
+        }
         return
     }
-    
+
     try {
-        # Run lpick with the specific problem number
-        ^lpick $problem_number
+        ^leetgo pick $problem_number
         print $"(ansi green)Problem ($problem_number) picked successfully!(ansi reset)"
     } catch { |e|
         print $"(ansi red)Error picking problem ($problem_number): ($e.msg)(ansi reset)"
@@ -141,7 +198,7 @@ def get-leetgo-home [] {
     if $leetgo_home != "" {
         return $leetgo_home
     }
-    
+
     # 2. Default to ~/.config/leetgo
     return $"($env.HOME)/.config/leetgo"
 }
@@ -156,57 +213,64 @@ def get-current-problem [] {
     try {
         let cache_dir = (get-leetgo-cache-dir)
         let cache_file = $"($cache_dir)/state.json"
-        
+
         if not ($cache_file | path exists) {
             print $"(ansi yellow)Warning: Leetgo cache file not found: ($cache_file)(ansi reset)"
             return null
         }
-        
+
         let cache_data = (open $cache_file)
         let current_dir = (pwd)
-        
-        # Find the cache entry for current directory
         let cache_entry = ($cache_data | get --optional $current_dir)
+
         if $cache_entry == null {
             print $"(ansi yellow)Warning: No cache entry found for current directory: ($current_dir)(ansi reset)"
             return null
         }
-        
+
         let last_question = ($cache_entry | get --optional "last_question")
         if $last_question == null {
             print $"(ansi yellow)Warning: No last_question found in cache(ansi reset)"
             return null
         }
-        
+
         let frontend_id = ($last_question | get --optional "frontend_id")
         let slug = ($last_question | get --optional "slug")
         let gen = ($last_question | get --optional "gen")
-        
+
         if ($frontend_id == null) or ($slug == null) {
             print $"(ansi yellow)Warning: Incomplete question data in cache(ansi reset)"
             return null
         }
-        
-        # Convert slug to readable name
-        let readable_name = ($slug | split row '-' | str join ' ')
-        let lang = if $gen == "python3" { "Python" } else { $gen }
-        
-        return $"LeetCode.($frontend_id): ($readable_name) [($lang)]"
-        
+
+        return $"LeetCode.($frontend_id): ($slug | split row '-' | str join ' ') [($gen | if $in == "python3" { "Python" } else { $in })]"
+
     } catch { |e|
         print $"(ansi red)Error getting current problem from leetgo cache: ($e.msg)(ansi reset)"
         return null
     }
 }
 
-# Test the current solution using ltest
-def test-solution [] {
-    print $"(ansi blue)Testing solution...(ansi reset)"
+# Execute command with error handling
+# Returns true on success, false on failure
+def execute-cmd [cmd: string, success_msg: string, error_prefix: string] {
+    print $"(ansi blue)($success_msg)...(ansi reset)"
     try {
-        ^ltest
+        ^$cmd
+        print $"(ansi green)($success_msg) successfully!(ansi reset)"
+        return true
+    } catch { |e|
+        print $"(ansi red)Error ($error_prefix): ($e.msg)(ansi reset)"
+        return false
+    }
+}
+
+# Test the current solution using leetgo test
+def test-solution [] {
+    try {
+        ^leetgo test last
         print $"(ansi green)Solution tested successfully!(ansi reset)"
     } catch { |e|
-        # Check if it's a non-zero exit code error
         if ($e.msg | str contains "External command had a non-zero exit code") {
             print $"(ansi yellow)Test failed. Please check your solution and try again.(ansi reset)"
         } else {
@@ -215,15 +279,12 @@ def test-solution [] {
     }
 }
 
-# Push the solution using lpush
+# Push the solution using leetgo submit
 def push-solution [] {
     print $"(ansi blue)Pushing solution...(ansi reset)"
     try {
-        let output = (^lpush)
-        
-        # Check if the output contains "Accepted" and format accordingly
+        let output = (^leetgo submit last)
         if ($output | str contains "Accepted") {
-            # Replace "Accepted" with green version
             let colored_output = ($output | str replace "Accepted" $"(ansi green)Accepted(ansi reset)")
             print $colored_output
             print $"(ansi green)🎉 Solution Accepted!(ansi reset)"
@@ -241,13 +302,7 @@ def push-solution [] {
 
 # Commit all solutions using the Makefile
 def commit-all [] {
-    print $"(ansi blue)Committing all solutions...(ansi reset)"
-    try {
-        make commit
-        print $"(ansi green)All solutions committed successfully!(ansi reset)"
-    } catch { |e|
-        print $"(ansi red)Error committing solutions: ($e.msg)(ansi reset)"
-    }
+    execute-cmd "make commit" "Committing all solutions" "committing solutions"
 }
 
 # Show git status
@@ -260,16 +315,9 @@ def show-git-status [] {
     }
 }
 
-
 # Extract CodeTop problems
 def extract-codetop [] {
-    print $"(ansi blue)Extracting CodeTop problems...(ansi reset)"
-    try {
-        nu scripts/codetop-extractor.nu
-        print $"(ansi green)CodeTop problems extracted successfully!(ansi reset)"
-    } catch { |e|
-        print $"(ansi red)Error extracting CodeTop problems: ($e.msg)(ansi reset)"
-    }
+    execute-cmd "nu scripts/codetop-extractor.nu" "Extracting CodeTop problems" "extracting CodeTop problems"
 }
 
 # Main entry point

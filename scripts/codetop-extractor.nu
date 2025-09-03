@@ -69,7 +69,7 @@ const tag_to_label = {
 def main [tag?: int, --all, --output-dir: string = "dist"] {
     # Load environment variables
     load-env
-    
+
     # Get token from environment variable
     let token = ($env.CODETOP_TOKEN? | default "")
     if $token == "" {
