@@ -186,7 +186,12 @@ def pick-problem [] {
         ^leetgo pick $problem_number
         print $"(ansi green)Problem ($problem_number) picked successfully!(ansi reset)"
     } catch { |e|
-        print $"(ansi red)Error picking problem ($problem_number): ($e.msg)(ansi reset)"
+        print $"(ansi red)Error picking problem ($problem_number):(ansi reset)"
+        print $"(ansi red)Command: leetgo pick ($problem_number)(ansi reset)"
+        print $"(ansi red)Error details: ($e.msg)(ansi reset)"
+        if ($e | get --optional stderr) != null {
+            print $"(ansi red)Stderr: ($e.stderr)(ansi reset)"
+        }
         print "Please check if the problem number exists."
     }
 }
@@ -260,7 +265,12 @@ def execute-cmd [cmd: string, success_msg: string, error_prefix: string] {
         print $"(ansi green)($success_msg) successfully!(ansi reset)"
         return true
     } catch { |e|
-        print $"(ansi red)Error ($error_prefix): ($e.msg)(ansi reset)"
+        print $"(ansi red)Error ($error_prefix):(ansi reset)"
+        print $"(ansi red)Command: ($cmd)(ansi reset)"
+        print $"(ansi red)Error details: ($e.msg)(ansi reset)"
+        if ($e | get --optional stderr) != null {
+            print $"(ansi red)Stderr: ($e.stderr)(ansi reset)"
+        }
         return false
     }
 }
@@ -271,10 +281,14 @@ def test-solution [] {
         ^leetgo test last
         print $"(ansi green)Solution tested successfully!(ansi reset)"
     } catch { |e|
+        print $"(ansi red)Error testing solution:(ansi reset)"
+        print $"(ansi red)Command: leetgo test last(ansi reset)"
+        print $"(ansi red)Error details: ($e.msg)(ansi reset)"
+        if ($e | get --optional stderr) != null {
+            print $"(ansi red)Stderr: ($e.stderr)(ansi reset)"
+        }
         if ($e.msg | str contains "External command had a non-zero exit code") {
             print $"(ansi yellow)Test failed. Please check your solution and try again.(ansi reset)"
-        } else {
-            print $"(ansi red)Error testing solution: ($e.msg)(ansi reset)"
         }
     }
 }
@@ -295,7 +309,12 @@ def push-solution [] {
             return "pushed"
         }
     } catch { |e|
-        print $"(ansi red)Error pushing solution: ($e.msg)(ansi reset)"
+        print $"(ansi red)Error pushing solution:(ansi reset)"
+        print $"(ansi red)Command: leetgo submit last(ansi reset)"
+        print $"(ansi red)Error details: ($e.msg)(ansi reset)"
+        if ($e | get --optional stderr) != null {
+            print $"(ansi red)Stderr: ($e.stderr)(ansi reset)"
+        }
         return "error"
     }
 }
@@ -311,7 +330,12 @@ def show-git-status [] {
     try {
         git status
     } catch { |e|
-        print $"(ansi red)Error getting git status: ($e.msg)(ansi reset)"
+        print $"(ansi red)Error getting git status:(ansi reset)"
+        print $"(ansi red)Command: git status(ansi reset)"
+        print $"(ansi red)Error details: ($e.msg)(ansi reset)"
+        if ($e | get --optional stderr) != null {
+            print $"(ansi red)Stderr: ($e.stderr)(ansi reset)"
+        }
     }
 }
 
