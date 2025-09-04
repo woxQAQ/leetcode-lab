@@ -321,7 +321,8 @@ def push-solution [] {
 
 # Commit all solutions using the Makefile
 def commit-all [] {
-    execute-cmd "make commit" "Committing all solutions" "committing solutions"
+    # execute-cmd "make commit" "Committing all solutions" "committing solutions"
+    make commit
 }
 
 # Show git status
