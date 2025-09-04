@@ -256,40 +256,13 @@ def get-current-problem [] {
     }
 }
 
-# Execute command with error handling
-# Returns true on success, false on failure
-def execute-cmd [cmd: string, success_msg: string, error_prefix: string] {
-    print $"(ansi blue)($success_msg)...(ansi reset)"
-    try {
-        ^$cmd
-        print $"(ansi green)($success_msg) successfully!(ansi reset)"
-        return true
-    } catch { |e|
-        print $"(ansi red)Error ($error_prefix):(ansi reset)"
-        print $"(ansi red)Command: ($cmd)(ansi reset)"
-        print $"(ansi red)Error details: ($e.msg)(ansi reset)"
-        if ($e | get --optional stderr) != null {
-            print $"(ansi red)Stderr: ($e.stderr)(ansi reset)"
-        }
-        return false
-    }
-}
-
 # Test the current solution using leetgo test
 def test-solution [] {
     try {
         ^leetgo test last
         print $"(ansi green)Solution tested successfully!(ansi reset)"
-    } catch { |e|
-        print $"(ansi red)Error testing solution:(ansi reset)"
-        print $"(ansi red)Command: leetgo test last(ansi reset)"
-        print $"(ansi red)Error details: ($e.msg)(ansi reset)"
-        if ($e | get --optional stderr) != null {
-            print $"(ansi red)Stderr: ($e.stderr)(ansi reset)"
-        }
-        if ($e.msg | str contains "External command had a non-zero exit code") {
-            print $"(ansi yellow)Test failed. Please check your solution and try again.(ansi reset)"
-        }
+    } catch {
+        print $"(ansi yellow)Test failed. Please check your solution and try again.(ansi reset)"
     }
 }
 
@@ -321,7 +294,6 @@ def push-solution [] {
 
 # Commit all solutions using the Makefile
 def commit-all [] {
-    # execute-cmd "make commit" "Committing all solutions" "committing solutions"
     make commit
 }
 
@@ -342,7 +314,7 @@ def show-git-status [] {
 
 # Extract CodeTop problems
 def extract-codetop [] {
-    execute-cmd "nu scripts/codetop-extractor.nu" "Extracting CodeTop problems" "extracting CodeTop problems"
+    nu scripts/codetop-extractor.nu
 }
 
 # Main entry point
