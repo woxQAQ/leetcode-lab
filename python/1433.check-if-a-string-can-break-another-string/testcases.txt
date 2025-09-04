@@ -1,0 +1,17 @@
+input:
+"abc"
+"xya"
+output:
+true
+
+input:
+"abe"
+"acd"
+output:
+false
+
+input:
+"leetcodee"
+"interview"
+output:
+true
