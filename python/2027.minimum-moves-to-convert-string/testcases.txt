@@ -1,0 +1,14 @@
+input:
+"XXX"
+output:
+1
+
+input:
+"XXOX"
+output:
+2
+
+input:
+"OOOO"
+output:
+0
