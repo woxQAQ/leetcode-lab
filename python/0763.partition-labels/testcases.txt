@@ -1,0 +1,14 @@
+input:
+"ababcbacadefegdehijhklij"
+output:
+[9,7,8]
+
+input:
+"eccbbbbdec"
+output:
+[10]
+
+input:
+"caedbdedda"
+output:
+[1,9]
