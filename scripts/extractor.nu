@@ -1,4 +1,5 @@
 #!/usr/bin/env nu
+# an nushell port of extractor
 
 def main [] {
     let openai_base_url = ($env.OPENAI_BASE_URL? | default "")

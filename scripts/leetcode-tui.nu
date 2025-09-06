@@ -90,8 +90,8 @@ def main [] {
 
         print $"(ansi cyan)Main Menu:(ansi reset)"
         print "1. Pick new problem (enter problem number)"
-        print "2. Test current solution (ltest)"
-        print "3. Push solution (lpush)"
+        print "2. Test current solution"
+        print "3. Push solution"
         print "4. Commit and push all solutions"
         print "5. View git status"
         print "6. Extract CodeTop problems"

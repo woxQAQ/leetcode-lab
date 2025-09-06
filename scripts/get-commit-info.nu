@@ -1,4 +1,5 @@
 #!/usr/bin/env nu
+# an scripts to get what problems this commit solved
 def main [] {
     let current_time = (date now | format date "%Y-%m-%d %H:%M:%S")
     mut output = [$"Solution Update: ($current_time)"]

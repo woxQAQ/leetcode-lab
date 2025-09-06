@@ -1,4 +1,5 @@
 #!/usr/bin/env nu
+# an easy nushell scripts to extract problem set from codetop
 
 # Load environment variables from .env file if it exists
 def load-env [] {
