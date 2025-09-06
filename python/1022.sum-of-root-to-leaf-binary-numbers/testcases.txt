@@ -1,0 +1,9 @@
+input:
+[1,0,1,0,1,0,1]
+output:
+22
+
+input:
+[0]
+output:
+0
