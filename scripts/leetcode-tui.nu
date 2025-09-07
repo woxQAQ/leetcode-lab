@@ -175,6 +175,7 @@ def pick-problem [] {
     print ""
 
     let problem_number = (get-input-safe "Enter LeetCode problem number: ")
+        | str replace -r '^0+' ''
     if ($problem_number == null) or ($problem_number | str trim) == "" {
         if $problem_number != null {
             print $"(ansi red)Error: Problem number cannot be empty.(ansi reset)"
