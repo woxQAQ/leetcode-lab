@@ -51,6 +51,7 @@ def get-input-safe [prompt: string] {
     }
 }
 
+
 def main [] {
     clear
     print $"(ansi green)LeetCode TUI Workflow Manager(ansi reset)"
