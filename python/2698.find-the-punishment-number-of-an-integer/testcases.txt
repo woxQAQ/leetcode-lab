@@ -1,9 +1,9 @@
 input:
-"babad"
+10
 output:
-"bab"
+182
 
 input:
-"cbbd"
+37
 output:
-"bb"
+1478

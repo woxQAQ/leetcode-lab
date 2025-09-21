@@ -1,5 +1,5 @@
-# Created by woxQAQ at 2025/08/31 18:05
-# leetgo: 1.4.13
+# Created by woxQAQ at 2025/09/20 17:18
+# leetgo: 1.4.15
 # https://leetcode.cn/problems/longest-increasing-subsequence/
 
 from functools import cache
@@ -11,17 +11,16 @@ from leetgo_py import *
 
 class Solution:
     def lengthOfLIS(self, nums: List[int]) -> int:
-        n = len(nums)
-
+        # dfs(i): LIS of nums[:i]
         @cache
         def dfs(i):
             res = 0
-            for j in range(i - 1, -1, -1):
-                if nums[i] > nums[j]:
-                    res = max(res, dfs(j))
-            return res + 1
+            for j in range(i):
+                if nums[j] < nums[i]:
+                    res = max(res, dfs(j) + 1)
+            return res
 
-        return max(dfs(i) for i in range(n))
+        return max(dfs(i) + 1 for i in range(len(nums)))
 
 
 # @lc code=end
