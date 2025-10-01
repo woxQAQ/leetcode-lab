@@ -13,3 +13,9 @@ commit:
 .PHONY: extractor-codetop
 extractor-codetop:
 	@nu scripts/codetop-extractor.nu
+
+switch-to-go:
+	nu scripts/switch-lang.nu go
+
+switch-to-python:
+	nu scripts/switch-lang.nu python
