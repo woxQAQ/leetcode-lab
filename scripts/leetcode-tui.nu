@@ -268,7 +268,7 @@ def get-current-problem [] {
 # Test the current solution using leetgo test
 def test-solution [] {
   try {
-    ^leetgo test last
+    ^leetgo test last --local
     print $"(ansi green)Solution tested successfully!(ansi reset)"
   } catch {
     print $"(ansi yellow)Test failed. Please check your solution and try again.(ansi reset)"

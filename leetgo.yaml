@@ -6,7 +6,7 @@ language: zh
 code:
   # Language of code generated for questions: go, cpp, python, java...
   # (will be overridden by command line flag -l/--lang).
-  lang: go
+  lang: python
   # The default template to generate filename (without extension), e.g. {{.Id}}.{{.Slug}}
   # Available attributes: Id, Slug, Title, Difficulty, Lang, SlugIsMeaningful
   # (Most questions have descriptive slugs, but some consist of random characters. The SlugIsMeaningful boolean indicates whether a slug is meaningful.)
@@ -53,7 +53,7 @@ leetcode:
     from:
       - cookies
     # Browsers to get cookies from: chrome, safari, edge or firefox. If empty, all browsers will be tried. Only used when 'from' is 'browser'.
-    browsers: []
+    browsers: ["firefox"]
 contest:
   # Base directory to put generated contest questions.
   out_dir: contest
