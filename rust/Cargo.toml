@@ -1,0 +1,38 @@
+[[bin]]
+name = 'two-sum'
+path = 'src/0001.two-sum/solution.rs'
+
+[[bin]]
+name = 'container-with-most-water'
+path = 'src/0011.container-with-most-water/solution.rs'
+
+[[bin]]
+name = '3sum'
+path = 'src/0015.3sum/solution.rs'
+
+[[bin]]
+name = 'trapping-rain-water'
+path = 'src/0042.trapping-rain-water/solution.rs'
+
+[[bin]]
+name = 'group-anagrams'
+path = 'src/0049.group-anagrams/solution.rs'
+
+[[bin]]
+name = 'longest-consecutive-sequence'
+path = 'src/0128.longest-consecutive-sequence/solution.rs'
+
+[[bin]]
+name = 'move-zeroes'
+path = 'src/0283.move-zeroes/solution.rs'
+
+[dependencies]
+anyhow = '1.0.79'
+leetgo-rs = '0.2.1'
+serde = '1.0.196'
+serde_json = '1.0.113'
+
+[package]
+edition = '2024'
+name = 'leetcode-solutions'
+version = '0.1.0'
