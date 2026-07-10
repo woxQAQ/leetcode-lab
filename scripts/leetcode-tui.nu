@@ -68,6 +68,12 @@ def main [] {
   }
 
   mut current_problem = (get-current-problem)
+  mut current_problem_id = if $current_problem != null {
+    let id = ($current_problem | str replace -r '^LeetCode\.([0-9]+):.*' '$1')
+    if $id == $current_problem { null } else { $id }
+  } else {
+    null
+  }
   mut last_action = ""
   mut workflow_state = if $current_problem != null { "coding" } else { "idle" }  # idle, picking, coding, testing, pushing
 
@@ -88,15 +94,20 @@ def main [] {
     }
     print ""
 
+    # Display problem content if a problem is selected
+    if $current_problem_id != null {
+      show-problem-content $current_problem_id
+    }
+
     print $"(ansi cyan)Main Menu:(ansi reset)"
     print "1. Pick new problem (enter problem number)"
     print "2. Test current solution"
     print "3. Push solution"
-    print "4. Commit and push all solutions"
-    print "5. View git status"
-    print "6. Extract CodeTop problems"
-    print "7. Switch Language"
-    print "8. Exit"
+    # print "4. Commit and push all solutions"
+    # print "5. View git status"
+    # print "6. Extract CodeTop problems"
+    # print "7. Switch Language"
+    print "4. Exit"
     print ""
 
     let choice = (get-input "Enter your choice (1-8): ")
@@ -105,6 +116,12 @@ def main [] {
       "1" => {
         pick-problem
         $current_problem = get-current-problem
+        if $current_problem != null {
+          let id = ($current_problem | str replace -r '^LeetCode\.([0-9]+):.*' '$1')
+          $current_problem_id = if $id == $current_problem { null } else { $id }
+        } else {
+          $current_problem_id = null
+        }
         $workflow_state = "coding"
         $last_action = "Picked new problem"
       }
@@ -136,28 +153,28 @@ def main [] {
           $last_action = "Failed to push solution"
         }
       }
+      # "4" => {
+      #   commit-all
+      #   $workflow_state = "idle"
+      #   $last_action = "Committed all solutions"
+      # }
+      # "5" => {
+      #   show-git-status
+      #   $last_action = "Viewed git status"
+      # }
+      # "6" => {
+      #   extract-codetop
+      #   $last_action = "Extracted CodeTop problems"
+      # }
+      # "7" => {
+      #   let lang = (get-input-safe "Enter language to switch: ")
+      #   if not ($lang in ["python" "go" "java" "cpp"]) {
+      #     print $"(ansi red)Error switch to ($lang):(ansi reset)"
+      #   } else {
+      #     ^nu ./scripts/switch-lang.nu $lang
+      #   }
+      # }
       "4" => {
-        commit-all
-        $workflow_state = "idle"
-        $last_action = "Committed all solutions"
-      }
-      "5" => {
-        show-git-status
-        $last_action = "Viewed git status"
-      }
-      "6" => {
-        extract-codetop
-        $last_action = "Extracted CodeTop problems"
-      }
-      "7" => {
-        let lang = (get-input-safe "Enter language to switch: ")
-        if not ($lang in ["python" "go" "java" "cpp"]) {
-          print $"(ansi red)Error switch to ($lang):(ansi reset)"
-        } else {
-          ^nu ./scripts/switch-lang.nu $lang
-        }
-      }
-      "8" => {
         print $"(ansi green)Goodbye!(ansi reset)"
         exit 0
       }
@@ -168,7 +185,7 @@ def main [] {
     }
 
     # Only show "Press Enter to continue" if not exiting
-    if $choice != "7" {
+    if $choice != "4" {
       print ""
       get-input "Press Enter to continue..."
       clear
@@ -262,6 +279,54 @@ def get-current-problem [] {
   } catch { |e|
     print $"(ansi red)Error getting current problem from leetgo cache: ($e.msg)(ansi reset)"
     return null
+  }
+}
+
+# Display problem content using leetgo info
+# Shows title, difficulty, tags, and full description
+def show-problem-content [problem_id: string] {
+  print $"(ansi blue)━━━ Problem Content ━━━(ansi reset)"
+
+  try {
+    let info_json = (^leetgo info $problem_id --full --format json | complete)
+
+    if $info_json.exit_code != 0 {
+      print $"(ansi yellow)Unable to fetch problem content. Make sure leetgo is configured correctly.(ansi reset)"
+      print ""
+      return
+    }
+
+    let info = ($info_json.stdout | from json)
+    let problem = ($info | first)
+
+    let title = ($problem | get --optional "title" | default "Unknown")
+    let difficulty = ($problem | get --optional "difficulty" | default "Unknown")
+    let tags = ($problem | get --optional "tags" | default [] | str join ", ")
+    let ac_rate = ($problem | get --optional "ac_rate" | default "N/A")
+    let content = ($problem | get --optional "content" | default "")
+
+    # Color the difficulty
+    let colored_difficulty = (match $difficulty {
+      "Easy" => $"(ansi green)($difficulty)(ansi reset)"
+      "Medium" => $"(ansi yellow)($difficulty)(ansi reset)"
+      "Hard" => $"(ansi red)($difficulty)(ansi reset)"
+      _ => $difficulty
+    })
+
+    print $"(ansi white_bold)($title)(ansi reset) - ($colored_difficulty)"
+    print $"Tags: (ansi cyan)($tags)(ansi reset)  |  AC Rate: ($ac_rate)"
+    print ""
+
+    if ($content | is-empty) {
+      print $"(ansi yellow)No description available.(ansi reset)"
+    } else {
+      print $"(ansi white)($content)(ansi reset)"
+    }
+
+    print ""
+  } catch { |e|
+    print $"(ansi yellow)Unable to fetch problem content: ($e.msg)(ansi reset)"
+    print ""
   }
 }
 
