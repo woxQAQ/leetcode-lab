@@ -68,19 +68,18 @@ def main [] {
   }
 
   mut current_problem = (get-current-problem)
-  mut current_problem_id = if $current_problem != null {
-    let id = ($current_problem | str replace -r '^LeetCode\.([0-9]+):.*' '$1')
-    if $id == $current_problem { null } else { $id }
-  } else {
-    null
-  }
+  mut current_problem_id = if $current_problem != null { $current_problem.id } else { null }
+  mut current_problem_slug = if $current_problem != null { $current_problem.slug } else { null }
+  mut current_problem_lang = if $current_problem != null { $current_problem.lang } else { null }
+  # Cache problem content to avoid repeated fetches
+  mut current_problem_content = ""
   mut last_action = ""
   mut workflow_state = if $current_problem != null { "coding" } else { "idle" }  # idle, picking, coding, testing, pushing
 
   loop {
     print $"(ansi yellow)Current Status:(ansi reset)"
     if $current_problem != null {
-      print $"Problem: ($current_problem)"
+      print $"Problem: ($current_problem.display)"
     } else {
       print "No problem selected"
     }
@@ -94,9 +93,14 @@ def main [] {
     }
     print ""
 
-    # Display problem content if a problem is selected
+    # Display problem content if a problem is selected (uses cache)
     if $current_problem_id != null {
-      show-problem-content $current_problem_id
+      if ($current_problem_content | is-empty) {
+        $current_problem_content = (fetch-problem-content $current_problem_id $current_problem_slug $current_problem_lang)
+      }
+      if not ($current_problem_content | is-empty) {
+        print $current_problem_content
+      }
     }
 
     print $"(ansi cyan)Main Menu:(ansi reset)"
@@ -117,11 +121,16 @@ def main [] {
         pick-problem
         $current_problem = get-current-problem
         if $current_problem != null {
-          let id = ($current_problem | str replace -r '^LeetCode\.([0-9]+):.*' '$1')
-          $current_problem_id = if $id == $current_problem { null } else { $id }
+          $current_problem_id = $current_problem.id
+          $current_problem_slug = $current_problem.slug
+          $current_problem_lang = $current_problem.lang
         } else {
           $current_problem_id = null
+          $current_problem_slug = null
+          $current_problem_lang = null
         }
+        # Invalidate cache so content is re-fetched for new problem
+        $current_problem_content = ""
         $workflow_state = "coding"
         $last_action = "Picked new problem"
       }
@@ -241,6 +250,7 @@ def get-leetgo-cache-dir [] {
 }
 
 # Get the current problem from leetgo cache
+# Returns a record: {display: string, id: string, slug: string, lang: string} or null
 def get-current-problem [] {
   try {
     let cache_dir = (get-leetgo-cache-dir)
@@ -274,7 +284,16 @@ def get-current-problem [] {
       print $"(ansi yellow)Warning: Incomplete question data in cache(ansi reset)"
       return null
     }
-    return $"LeetCode.($frontend_id): ($slug | split row '-' | str join ' ') [($gen | if $in == "python3" { "Python" } else { $in })]"
+
+    let lang_display = ($gen | if $in == "python3" { "Python" } else { $in })
+    let display = $"LeetCode.($frontend_id): ($slug | split row '-' | str join ' ') [($lang_display)]"
+
+    return {
+      display: $display
+      id: $frontend_id
+      slug: $slug
+      lang: $gen
+    }
 
   } catch { |e|
     print $"(ansi red)Error getting current problem from leetgo cache: ($e.msg)(ansi reset)"
@@ -282,18 +301,98 @@ def get-current-problem [] {
   }
 }
 
-# Display problem content using leetgo info
-# Shows title, difficulty, tags, and full description
-def show-problem-content [problem_id: string] {
-  print $"(ansi blue)━━━ Problem Content ━━━(ansi reset)"
+# Fetch problem content, preferring local question.md, falling back to leetgo info
+# Result is cached in the main loop to avoid repeated reads
+def fetch-problem-content [problem_id: string, slug: string, lang: string] {
+  # Try local question.md first
+  let padded_id = ($problem_id | fill -a right -c '0' -w 4)
+  let local_path = (get-question-md-path $padded_id $slug $lang)
 
+  if ($local_path != null) and ($local_path | path exists) {
+    let result = (render-problem-from-md $local_path)
+    if $result != null {
+      return $result
+    }
+  }
+
+  # Fallback: fetch from leetgo info
+  let result = (fetch-problem-from-remote $problem_id)
+  if $result != null {
+    return $result
+  }
+
+  return $"(ansi blue)━━━ Problem Content ━━━(ansi reset)\n(ansi yellow)Unable to fetch problem content.(ansi reset)\n"
+}
+
+# Build path to question.md based on language and problem slug
+def get-question-md-path [padded_id: string, slug: string, lang: string] {
+  let base_dir = (match $lang {
+    "rust" => "rust/src"
+    "golang" => "go"
+    "python3" => "python"
+    "python" => "python"
+    "cpp" => "cpp"
+    "java" => "java"
+    _ => { return null }
+  })
+
+  return $"($base_dir)/($padded_id).($slug)/question.md"
+}
+
+# Render problem content from local question.md file
+def render-problem-from-md [path: string] {
+  try {
+    let raw = (open --raw $path)
+    # question.md format:
+    # # [id. title][link] (Difficulty)
+    # [link]: url
+    #
+    # content...
+
+    let lines = ($raw | lines)
+
+    # Parse title line: "# [id. title][link] (Difficulty)"
+    let header = ($lines | first)
+    let title_match = ($header | parse '# [{id}. {title}][link] ({difficulty})')
+
+    let title = if ($title_match | length) > 0 {
+      ($title_match | get title | first)
+    } else {
+      "Unknown"
+    }
+    let difficulty = if ($title_match | length) > 0 {
+      ($title_match | get difficulty | first)
+    } else {
+      "Unknown"
+    }
+
+    # Content starts after the [link]: line (line index 2, content from line 3)
+    let content = if ($lines | length) > 2 {
+      ($lines | skip 3 | str join "\n")
+    } else {
+      ""
+    }
+
+    let colored_difficulty = (match $difficulty {
+      "Easy" => $"(ansi green)($difficulty)(ansi reset)"
+      "Medium" => $"(ansi yellow)($difficulty)(ansi reset)"
+      "Hard" => $"(ansi red)($difficulty)(ansi reset)"
+      _ => $difficulty
+    })
+
+    return $"(ansi blue)━━━ Problem Content ━━━(ansi reset)\n(ansi white_bold)($title)(ansi reset) - ($colored_difficulty)\n\n(ansi white)($content)(ansi reset)\n"
+  } catch {
+    return null
+  }
+}
+
+# Fetch problem content from leetgo info (network call)
+def fetch-problem-from-remote [problem_id: string] {
   try {
     let info_json = (^leetgo info $problem_id --full --format json | complete)
 
     if $info_json.exit_code != 0 {
-      print $"(ansi yellow)Unable to fetch problem content. Make sure leetgo is configured correctly.(ansi reset)"
-      print ""
-      return
+      return null
     }
 
     let info = ($info_json.stdout | from json)
@@ -305,7 +404,6 @@ def show-problem-content [problem_id: string] {
     let ac_rate = ($problem | get --optional "ac_rate" | default "N/A")
     let content = ($problem | get --optional "content" | default "")
 
-    # Color the difficulty
     let colored_difficulty = (match $difficulty {
       "Easy" => $"(ansi green)($difficulty)(ansi reset)"
       "Medium" => $"(ansi yellow)($difficulty)(ansi reset)"
@@ -313,20 +411,15 @@ def show-problem-content [problem_id: string] {
       _ => $difficulty
     })
 
-    print $"(ansi white_bold)($title)(ansi reset) - ($colored_difficulty)"
-    print $"Tags: (ansi cyan)($tags)(ansi reset)  |  AC Rate: ($ac_rate)"
-    print ""
-
-    if ($content | is-empty) {
-      print $"(ansi yellow)No description available.(ansi reset)"
+    let description = if ($content | is-empty) {
+      $"(ansi yellow)No description available.(ansi reset)"
     } else {
-      print $"(ansi white)($content)(ansi reset)"
+      $"(ansi white)($content)(ansi reset)"
     }
 
-    print ""
-  } catch { |e|
-    print $"(ansi yellow)Unable to fetch problem content: ($e.msg)(ansi reset)"
-    print ""
+    return $"(ansi blue)━━━ Problem Content ━━━(ansi reset)\n(ansi white_bold)($title)(ansi reset) - ($colored_difficulty)\nTags: (ansi cyan)($tags)(ansi reset)  |  AC Rate: ($ac_rate)\n\n($description)\n"
+  } catch {
+    return null
   }
 }
 

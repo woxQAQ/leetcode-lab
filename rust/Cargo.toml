@@ -3,12 +3,32 @@ name = 'two-sum'
 path = 'src/0001.two-sum/solution.rs'
 
 [[bin]]
+name = 'add-two-numbers'
+path = 'src/0002.add-two-numbers/solution.rs'
+
+[[bin]]
+name = 'longest-substring-without-repeating-characters'
+path = 'src/0003.longest-substring-without-repeating-characters/solution.rs'
+
+[[bin]]
 name = 'container-with-most-water'
 path = 'src/0011.container-with-most-water/solution.rs'
 
 [[bin]]
 name = '3sum'
 path = 'src/0015.3sum/solution.rs'
+
+[[bin]]
+name = 'remove-nth-node-from-end-of-list'
+path = 'src/0019.remove-nth-node-from-end-of-list/solution.rs'
+
+[[bin]]
+name = 'merge-two-sorted-lists'
+path = 'src/0021.merge-two-sorted-lists/solution.rs'
+
+[[bin]]
+name = 'first-missing-positive'
+path = 'src/0041.first-missing-positive/solution.rs'
 
 [[bin]]
 name = 'trapping-rain-water'
@@ -19,16 +39,137 @@ name = 'group-anagrams'
 path = 'src/0049.group-anagrams/solution.rs'
 
 [[bin]]
+name = 'maximum-subarray'
+path = 'src/0053.maximum-subarray/solution.rs'
+
+[[bin]]
+name = 'spiral-matrix'
+path = 'src/0054.spiral-matrix/solution.rs'
+
+[[bin]]
+name = 'merge-intervals'
+path = 'src/0056.merge-intervals/solution.rs'
+
+[[bin]]
+name = 'set-matrix-zeroes'
+path = 'src/0073.set-matrix-zeroes/solution.rs'
+
+[[bin]]
+name = 'minimum-window-substring'
+path = 'src/0076.minimum-window-substring/solution.rs'
+
+[[bin]]
+name = 'binary-tree-inorder-traversal'
+path = 'src/0094.binary-tree-inorder-traversal/solution.rs'
+
+[[bin]]
+name = 'validate-binary-search-tree'
+path = 'src/0098.validate-binary-search-tree/solution.rs'
+
+[[bin]]
+name = 'symmetric-tree'
+path = 'src/0101.symmetric-tree/solution.rs'
+
+[[bin]]
+name = 'binary-tree-level-order-traversal'
+path = 'src/0102.binary-tree-level-order-traversal/solution.rs'
+
+[[bin]]
+name = 'maximum-depth-of-binary-tree'
+path = 'src/0104.maximum-depth-of-binary-tree/solution.rs'
+
+[[bin]]
+name = 'construct-binary-tree-from-preorder-and-inorder-traversal'
+path = 'src/0105.construct-binary-tree-from-preorder-and-inorder-traversal/solution.rs'
+
+[[bin]]
+name = 'convert-sorted-array-to-binary-search-tree'
+path = 'src/0108.convert-sorted-array-to-binary-search-tree/solution.rs'
+
+[[bin]]
+name = 'flatten-binary-tree-to-linked-list'
+path = 'src/0114.flatten-binary-tree-to-linked-list/solution.rs'
+
+[[bin]]
+name = 'binary-tree-maximum-path-sum'
+path = 'src/0124.binary-tree-maximum-path-sum/solution.rs'
+
+[[bin]]
 name = 'longest-consecutive-sequence'
 path = 'src/0128.longest-consecutive-sequence/solution.rs'
+
+[[bin]]
+name = 'rotate-array'
+path = 'src/0189.rotate-array/solution.rs'
+
+[[bin]]
+name = 'binary-tree-right-side-view'
+path = 'src/0199.binary-tree-right-side-view/solution.rs'
+
+[[bin]]
+name = 'reverse-linked-list'
+path = 'src/0206.reverse-linked-list/solution.rs'
+
+[[bin]]
+name = 'implement-trie-prefix-tree'
+path = 'src/0208.implement-trie-prefix-tree/solution.rs'
+
+[[bin]]
+name = 'kth-largest-element-in-an-array'
+path = 'src/0215.kth-largest-element-in-an-array/solution.rs'
+
+[[bin]]
+name = 'invert-binary-tree'
+path = 'src/0226.invert-binary-tree/solution.rs'
+
+[[bin]]
+name = 'kth-smallest-element-in-a-bst'
+path = 'src/0230.kth-smallest-element-in-a-bst/solution.rs'
+
+[[bin]]
+name = 'palindrome-linked-list'
+path = 'src/0234.palindrome-linked-list/solution.rs'
+
+[[bin]]
+name = 'lowest-common-ancestor-of-a-binary-tree'
+path = 'src/0236.lowest-common-ancestor-of-a-binary-tree/solution.rs'
+
+[[bin]]
+name = 'product-of-array-except-self'
+path = 'src/0238.product-of-array-except-self/solution.rs'
+
+[[bin]]
+name = 'sliding-window-maximum'
+path = 'src/0239.sliding-window-maximum/solution.rs'
+
+[[bin]]
+name = 'search-a-2d-matrix-ii'
+path = 'src/0240.search-a-2d-matrix-ii/solution.rs'
 
 [[bin]]
 name = 'move-zeroes'
 path = 'src/0283.move-zeroes/solution.rs'
 
+[[bin]]
+name = 'path-sum-iii'
+path = 'src/0437.path-sum-iii/solution.rs'
+
+[[bin]]
+name = 'find-all-anagrams-in-a-string'
+path = 'src/0438.find-all-anagrams-in-a-string/solution.rs'
+
+[[bin]]
+name = 'diameter-of-binary-tree'
+path = 'src/0543.diameter-of-binary-tree/solution.rs'
+
+[[bin]]
+name = 'subarray-sum-equals-k'
+path = 'src/0560.subarray-sum-equals-k/solution.rs'
+
 [dependencies]
 anyhow = '1.0.79'
 leetgo-rs = '0.2.1'
+rand = "0.10.2"
 serde = '1.0.196'
 serde_json = '1.0.113'
 
