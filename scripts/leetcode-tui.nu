@@ -10,21 +10,27 @@
 # - CodeTop problem extraction
 # - Error handling and user feedback
 
+# Nushell versions expose interrupt details in different error fields.
+def is-interrupt [e] {
+  let details = ([
+    ($e | get --optional msg | default "")
+    ($e | get --optional debug | default "")
+    ($e | get --optional rendered | default "")
+    ($e | get --optional json | default "")
+  ] | str join " " | str downcase)
+
+  return ($details | str contains "interrupt")
+}
+
 # Handle interrupt errors consistently
 # Returns error message or exits on interrupt
 def handle-interrupt [e] {
-  match $e {
-    {msg: $msg} => {
-      if ($msg | str contains "interrupted") {
-        print $"(ansi green)Goodbye!(ansi reset)"
-        exit 0
-      }
-      return $msg
-    }
-    _ => {
-      return "Unknown error occurred"
-    }
+  if (is-interrupt $e) {
+    print $"(ansi green)Goodbye!(ansi reset)"
+    exit 0
   }
+
+  return ($e | get --optional msg | default "Unknown error occurred")
 }
 
 # Get user input with interrupt handling
@@ -45,8 +51,12 @@ def get-input-safe [prompt: string] {
   try {
     input $prompt
   } catch { |e|
-    let error_msg = (handle-interrupt $e)
-    print $"(ansi red)Error: ($error_msg)(ansi reset)"
+    if (is-interrupt $e) {
+      print ""
+    } else {
+      let error_msg = ($e | get --optional msg | default "Unknown error occurred")
+      print $"(ansi red)Error: ($error_msg)(ansi reset)"
+    }
     return null
   }
 }
@@ -114,25 +124,31 @@ def main [] {
     print "4. Exit"
     print ""
 
-    let choice = (get-input "Enter your choice (1-8): ")
+    let choice = (get-input "Enter your choice (1-4): ")
 
     match $choice {
       "1" => {
-        pick-problem
-        $current_problem = get-current-problem
-        if $current_problem != null {
-          $current_problem_id = $current_problem.id
-          $current_problem_slug = $current_problem.slug
-          $current_problem_lang = $current_problem.lang
-        } else {
-          $current_problem_id = null
-          $current_problem_slug = null
-          $current_problem_lang = null
+        let pick_result = (pick-problem)
+        if $pick_result == "cancelled" {
+          clear
+          continue
         }
-        # Invalidate cache so content is re-fetched for new problem
-        $current_problem_content = ""
-        $workflow_state = "coding"
-        $last_action = "Picked new problem"
+        if $pick_result == "picked" {
+          $current_problem = get-current-problem
+          if $current_problem != null {
+            $current_problem_id = $current_problem.id
+            $current_problem_slug = $current_problem.slug
+            $current_problem_lang = $current_problem.lang
+          } else {
+            $current_problem_id = null
+            $current_problem_slug = null
+            $current_problem_lang = null
+          }
+          # Invalidate cache so content is re-fetched for new problem
+          $current_problem_content = ""
+          $workflow_state = "coding"
+          $last_action = "Picked new problem"
+        }
       }
       "2" => {
         if $current_problem == null {
@@ -209,18 +225,21 @@ def pick-problem [] {
   print "Examples: 1, 2, 15, 1642, etc."
   print ""
 
-  let problem_number = (get-input-safe "Enter LeetCode problem number: ")
-    | str replace -r '^0+' ''
-  if ($problem_number == null) or ($problem_number | str trim) == "" {
-    if $problem_number != null {
-      print $"(ansi red)Error: Problem number cannot be empty.(ansi reset)"
-    }
-    return
+  let raw_problem_number = (get-input-safe "Enter LeetCode problem number: ")
+  if $raw_problem_number == null {
+    return "cancelled"
+  }
+
+  let problem_number = ($raw_problem_number | str replace -r '^0+' '')
+  if ($problem_number | str trim) == "" {
+    print $"(ansi red)Error: Problem number cannot be empty.(ansi reset)"
+    return "invalid"
   }
 
   try {
     ^leetgo pick $problem_number
     print $"(ansi green)Problem ($problem_number) picked successfully!(ansi reset)"
+    return "picked"
   } catch { |e|
     print $"(ansi red)Error picking problem ($problem_number):(ansi reset)"
     print $"(ansi red)Command: leetgo pick ($problem_number)(ansi reset)"
@@ -229,6 +248,7 @@ def pick-problem [] {
         print $"(ansi red)Stderr: ($e.stderr)(ansi reset)"
     }
     print "Please check if the problem number exists."
+    return "failed"
   }
 }
 
