@@ -1,4 +1,4 @@
-// Created by woxQAQ at 2026/07/10 15:57
+// Created by woxQAQ at 2026/08/27 10:10
 // leetgo: 1.4.17
 // https://leetcode.cn/problems/reverse-linked-list/
 
@@ -25,17 +25,17 @@ struct Solution;
 //     }
 //   }
 // }
+type Node = Option<Box<ListNode>>;
 impl Solution {
-    pub fn reverse_list(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
-        let mut pre = None;
+    pub fn reverse_list(head: Node) -> Node {
+        let mut prev = None;
         let mut cur = head;
         while let Some(mut node) = cur {
-            let nxt = node.next;
-            node.next = pre;
-            pre = Some(node);
-            cur = nxt;
+            cur = node.next.take();
+            node.next = prev;
+            prev = Some(node)
         }
-        pre
+        prev
     }
 }
 

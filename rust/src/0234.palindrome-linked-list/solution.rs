@@ -1,4 +1,4 @@
-// Created by woxQAQ at 2026/07/10 17:08
+// Created by woxQAQ at 2026/08/27 10:17
 // leetgo: 1.4.17
 // https://leetcode.cn/problems/palindrome-linked-list/
 
@@ -25,61 +25,46 @@ struct Solution;
 //     }
 //   }
 // }
-impl Solution {
-    // 206. 反转链表
-    fn reverse_list(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
-        let mut pre = None;
-        let mut cur = head;
-        while let Some(mut node) = cur {
-            let nxt = node.next;
-            node.next = pre;
-            pre = Some(node);
-            cur = nxt;
-        }
-        pre
-    }
 
-    pub fn is_palindrome(mut head: Option<Box<ListNode>>) -> bool {
-        // 1. 计算链表长度
+type Node = Option<Box<ListNode>>;
+impl Solution {
+    pub fn is_palindrome(head: Node) -> bool {
         let mut len = 0;
         let mut cur = &head;
         while let Some(node) = cur {
-            len += 1;
+            len = len + 1;
             cur = &node.next;
         }
-        if len <= 1 {
-            return true;
+        // 拆分链表同时反转
+        // 1 -> 2 -> 3 -> 2 -> 1
+        // 2 -> 1 -> None + 3 -> 2 -> 1
+        let mut rev: Node = None;
+        let mut cur = head;
+        for _ in 0..len / 2 {
+            // 逻辑上保证 unwrap 一定不会有问题
+            let mut node = cur.unwrap();
+            cur = node.next.take();
+            node.next = rev;
+            rev = Some(node);
         }
-
-        // 2. 移动到分割点前一个节点
-        let mut cur = &mut head;
-        for _ in 0..len / 2 - 1 {
-            cur = &mut cur.as_mut().unwrap().next;
+        // 奇数跳过中间节点
+        if len % 2 == 1 {
+            cur = cur.unwrap().next;
         }
-
-        // 3. 切出后半段（奇数长度时跳过中间元素）
-        let cur_node = cur.as_mut().unwrap();
-        let second = if len % 2 == 0 {
-            cur_node.next.take()
-        } else {
-            cur_node.next.take().and_then(|mid| mid.next)
-        };
-
-        // 4. 反转后半段，然后逐节点比较
-        let mut second = Self::reverse_list(second);
-        while head.is_some() && second.is_some() {
-            let n1 = head.take().unwrap();
-            let n2 = second.take().unwrap();
-            if n1.val != n2.val {
+        // 逐个对比
+        let mut a = rev;
+        let mut b = cur;
+        while let (Some(x), Some(y)) = (a, b) {
+            if x.val != y.val {
                 return false;
             }
-            head = n1.next;
-            second = n2.next;
+            a = x.next;
+            b = y.next;
         }
-
         true
     }
 }
+
 // @lc code=end
 
 fn main() -> Result<()> {

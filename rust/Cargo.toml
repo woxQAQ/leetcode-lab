@@ -11,12 +11,20 @@ name = 'longest-substring-without-repeating-characters'
 path = 'src/0003.longest-substring-without-repeating-characters/solution.rs'
 
 [[bin]]
+name = 'median-of-two-sorted-arrays'
+path = 'src/0004.median-of-two-sorted-arrays/solution.rs'
+
+[[bin]]
 name = 'container-with-most-water'
 path = 'src/0011.container-with-most-water/solution.rs'
 
 [[bin]]
 name = '3sum'
 path = 'src/0015.3sum/solution.rs'
+
+[[bin]]
+name = 'letter-combinations-of-a-phone-number'
+path = 'src/0017.letter-combinations-of-a-phone-number/solution.rs'
 
 [[bin]]
 name = 'remove-nth-node-from-end-of-list'
@@ -27,12 +35,44 @@ name = 'merge-two-sorted-lists'
 path = 'src/0021.merge-two-sorted-lists/solution.rs'
 
 [[bin]]
+name = 'generate-parentheses'
+path = 'src/0022.generate-parentheses/solution.rs'
+
+[[bin]]
+name = 'next-permutation'
+path = 'src/0031.next-permutation/solution.rs'
+
+[[bin]]
+name = 'search-in-rotated-sorted-array'
+path = 'src/0033.search-in-rotated-sorted-array/solution.rs'
+
+[[bin]]
+name = 'find-first-and-last-position-of-element-in-sorted-array'
+path = 'src/0034.find-first-and-last-position-of-element-in-sorted-array/solution.rs'
+
+[[bin]]
+name = 'search-insert-position'
+path = 'src/0035.search-insert-position/solution.rs'
+
+[[bin]]
+name = 'combination-sum'
+path = 'src/0039.combination-sum/solution.rs'
+
+[[bin]]
 name = 'first-missing-positive'
 path = 'src/0041.first-missing-positive/solution.rs'
 
 [[bin]]
 name = 'trapping-rain-water'
 path = 'src/0042.trapping-rain-water/solution.rs'
+
+[[bin]]
+name = 'multiply-strings'
+path = 'src/0043.multiply-strings/solution.rs'
+
+[[bin]]
+name = 'permutations'
+path = 'src/0046.permutations/solution.rs'
 
 [[bin]]
 name = 'group-anagrams'
@@ -55,8 +95,20 @@ name = 'set-matrix-zeroes'
 path = 'src/0073.set-matrix-zeroes/solution.rs'
 
 [[bin]]
+name = 'search-a-2d-matrix'
+path = 'src/0074.search-a-2d-matrix/solution.rs'
+
+[[bin]]
 name = 'minimum-window-substring'
 path = 'src/0076.minimum-window-substring/solution.rs'
+
+[[bin]]
+name = 'subsets'
+path = 'src/0078.subsets/solution.rs'
+
+[[bin]]
+name = 'word-search'
+path = 'src/0079.word-search/solution.rs'
 
 [[bin]]
 name = 'binary-tree-inorder-traversal'
@@ -97,6 +149,22 @@ path = 'src/0124.binary-tree-maximum-path-sum/solution.rs'
 [[bin]]
 name = 'longest-consecutive-sequence'
 path = 'src/0128.longest-consecutive-sequence/solution.rs'
+
+[[bin]]
+name = 'palindrome-partitioning'
+path = 'src/0131.palindrome-partitioning/solution.rs'
+
+[[bin]]
+name = 'linked-list-cycle-ii'
+path = 'src/0142.linked-list-cycle-ii/solution.rs'
+
+[[bin]]
+name = 'lru-cache'
+path = 'src/0146.lru-cache/solution.rs'
+
+[[bin]]
+name = 'sort-list'
+path = 'src/0148.sort-list/solution.rs'
 
 [[bin]]
 name = 'rotate-array'
@@ -166,10 +234,14 @@ path = 'src/0543.diameter-of-binary-tree/solution.rs'
 name = 'subarray-sum-equals-k'
 path = 'src/0560.subarray-sum-equals-k/solution.rs'
 
+[[bin]]
+name = 'find-missing-elements'
+path = 'src/3731.find-missing-elements/solution.rs'
+
 [dependencies]
 anyhow = '1.0.79'
 leetgo-rs = '0.2.1'
-rand = "0.10.2"
+rand = '0.10.2'
 serde = '1.0.196'
 serde_json = '1.0.113'
 
