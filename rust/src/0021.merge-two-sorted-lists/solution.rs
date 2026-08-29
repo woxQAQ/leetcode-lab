@@ -35,6 +35,11 @@ impl Solution {
         while let (Some(node1), Some(node2)) = (&list1, &list2) {
             if node1.val < node2.val {
                 cur.next = list1.take();
+                // 此处 list1 为 Some
+                // cur.next = list1 也为 Some
+                // 因此 cur = cur.next 也为 Some, ? 不会提前返回
+                // 是为了处理 Option 的安全写法
+                // 用 unwrap 也可以
                 cur = cur.next.as_mut()?;
                 list1 = cur.next.take();
             } else {

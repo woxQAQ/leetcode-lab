@@ -1,4 +1,4 @@
-// Created by woxQAQ at 2026/07/10 18:22
+// Created by woxQAQ at 2026/08/27 15:58
 // leetgo: 1.4.17
 // https://leetcode.cn/problems/add-two-numbers/
 
@@ -27,21 +27,24 @@ struct Solution;
 // }
 impl Solution {
     pub fn add_two_numbers(
-        mut l1: Option<Box<ListNode>>,
-        mut l2: Option<Box<ListNode>>,
+        l1: Option<Box<ListNode>>,
+        l2: Option<Box<ListNode>>,
     ) -> Option<Box<ListNode>> {
+        let mut l1 = l1;
+        let mut l2 = l2;
         let mut carry = 0;
         let mut dummy = ListNode::new(0);
         let mut cur = &mut dummy;
         while l1.is_some() || l2.is_some() || carry > 0 {
             let mut sum = carry;
-            if let Some(node) = l1 {
-                sum += node.val;
-                l1 = node.next;
+            if let Some(n1) = l1 {
+                sum += n1.val;
+                l1 = n1.next;
             }
-            if let Some(node) = l2 {
-                sum += node.val;
-                l2 = node.next;
+
+            if let Some(n2) = l2 {
+                sum += n2.val;
+                l2 = n2.next;
             }
             cur.next = Some(Box::new(ListNode::new(sum % 10)));
             carry = sum / 10;

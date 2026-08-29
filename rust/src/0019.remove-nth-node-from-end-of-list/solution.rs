@@ -1,11 +1,52 @@
-// Created by woxQAQ at 2026/07/10 18:30
+// Created by woxQAQ at 2026/08/27 16:28
 // leetgo: 1.4.17
 // https://leetcode.cn/problems/remove-nth-node-from-end-of-list/
+
+use std::{cell::RefCell, rc::Rc};
 
 use anyhow::Result;
 use leetgo_rs::*;
 
 struct Solution;
+
+type Link = Option<Rc<RefCell<Node>>>;
+
+struct Node {
+    val: i32,
+    next: Link,
+}
+
+pub fn remove_nth_from_end(head: Link, n: i32) -> Link {
+    let dummy = Rc::new(RefCell::new(Node { val: 0, next: head }));
+    let mut fast = Some(Rc::clone(&dummy));
+    let mut slow = Rc::clone(&dummy);
+    for _ in 0..n {
+        fast = fast.and_then(|node| node.borrow().next.clone());
+    }
+    while let Some(node) = fast {
+        fast = node.borrow().next.clone();
+        let nxt = slow.borrow().next.clone().unwrap();
+        slow = nxt;
+    }
+    // target = slow.next.next
+    let a = slow.borrow().next.as_ref().unwrap();
+    let target = slow
+        .borrow() // Ref<_, Node>
+        .next // Option<Rc> from RefCell
+        // 如果直接拿 Rc 的话会导致Refcell里的数据被 move
+        // 导致内存不安全, 因此需要
+        // 拿到里面数据的引用
+        // 这里也可以clone拿owned的引用但没必要
+        .as_ref() // Option<&Rc>
+        .unwrap() // &Rc
+        .borrow() // Ref<_, Node>
+        .next // Option<Rc>
+        // target 被赋值给 slow.next
+        // 需要一个 owned 的 ref，因此 clone Rc 使引用计数+1
+        .clone();
+    slow.borrow_mut().next = target;
+    dummy.borrow().next.clone()
+}
 
 // @lc code=begin
 
@@ -26,59 +67,20 @@ struct Solution;
 //   }
 // }
 impl Solution {
-    /// safe 写法：数长度 + 单指针遍历，两趟 O(n)，无 unsafe
     pub fn remove_nth_from_end(head: Option<Box<ListNode>>, n: i32) -> Option<Box<ListNode>> {
-        // 1. 计算链表长度
-        let mut len = 0;
-        let mut cur = &head;
-        while let Some(node) = cur {
-            len += 1;
-            cur = &node.next;
+        let mut dummy = Some(Box::new(ListNode { val: 0, next: head }));
+        let mut slow = &mut dummy;
+        let mut fast = &mut dummy;
+        for _ in 0..n {
+            if let Some(node) = fast {
+                fast = &mut node.next;
+            } else {
+                return None;
+            }
         }
-
-        // 2. 走到待删节点的前驱
-        let mut dummy = Box::new(ListNode { val: 0, next: head });
-        let mut cur = &mut *dummy;
-        for _ in 0..len - n {
-            cur = cur.next.as_mut().unwrap();
+        while fast.is_some() {
+            fast = fast.as_ref().unw
         }
-
-        // 3. 跳过目标节点
-        if let Some(target) = cur.next.take() {
-            cur.next = target.next;
-        }
-
-        dummy.next
-    }
-
-    /// unsafe 写法：经典快慢指针，一趟 O(n)
-    /// 原理：fast 指针先走 n 步，然后 slow 和 fast 同步前进，fast 到末尾时 slow 正好在待删节点的前驱
-    pub fn remove_nth_from_end_fast(head: Option<Box<ListNode>>, n: i32) -> Option<Box<ListNode>> {
-        let mut dummy = Box::new(ListNode { val: 0, next: head });
-
-        // fast: 裸指针，只读遍历
-        let mut fast: *const ListNode = &*dummy;
-        for _ in 0..=n {
-            // SAFETY: n <= 链表长度（题目保证），next 指针非空
-            fast = unsafe { (*fast).next.as_deref()? as *const ListNode };
-        }
-
-        // slow: 可变引用，从 dummy 出发
-        let mut slow: &mut ListNode = &mut *dummy;
-        while !fast.is_null() {
-            slow = slow.next.as_mut().unwrap();
-            // SAFETY: 与 slow 同步前进，不会悬垂
-            fast = unsafe { (*fast).next.as_ref() }
-                .map(|n| &**n as *const ListNode)
-                .unwrap_or(std::ptr::null());
-        }
-
-        // 此时 slow 指向待删节点的前驱
-        if let Some(target) = slow.next.take() {
-            slow.next = target.next;
-        }
-
-        dummy.next
     }
 }
 

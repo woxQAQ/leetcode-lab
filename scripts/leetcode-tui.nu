@@ -17,7 +17,7 @@ def is-interrupt [e] {
     ($e | get --optional debug | default "")
     ($e | get --optional rendered | default "")
     ($e | get --optional json | default "")
-  ] | str join " " | str downcase)
+  ] | str join " " | str lowercase)
 
   return ($details | str contains "interrupt")
 }
@@ -75,6 +75,12 @@ def main [] {
     print "Press Enter to exit..."
     get-input ""
     exit 1
+  }
+
+  # Mention the nicer rendering path once when glow is missing
+  if (which glow | is-empty) {
+    print $"(ansi dark_gray)Tip: install glow (github.com/charmbracelet/glow) for richer problem rendering.(ansi reset)"
+    print ""
   }
 
   mut current_problem = (get-current-problem)
@@ -359,6 +365,92 @@ def get-question-md-path [padded_id: string, slug: string, lang: string] {
   return $"($base_dir)/($padded_id).($slug)/question.md"
 }
 
+# Render markdown with glow; CLICOLOR_FORCE keeps styling even when output is piped
+def render-markdown-glow [md: string] {
+  let cols = (try { term size | get columns } catch { 80 })
+  let width = (if $cols > 100 { 100 } else if $cols < 20 { 80 } else { $cols - 2 })
+
+  # dark (not auto): auto drops all styling when the output is captured instead of a tty
+  with-env { CLICOLOR_FORCE: "1" } {
+    $md | ^glow -s dark -w $width -
+  }
+}
+
+# Wrap every odd-index segment produced by splitting on a markdown marker
+def wrap-pairs [text: string, marker: string, before: string, after: string] {
+  let pieces = ($text | split row $marker)
+  if ($pieces | length) < 2 {
+    return $text
+  }
+
+  $pieces | enumerate | each {|piece|
+    if ($piece.index mod 2) == 1 {
+      $"($before)($piece.item)($after)"
+    } else {
+      $piece.item
+    }
+  } | str join ""
+}
+
+# Render inline markdown (code spans, bold) with ANSI
+def render-inline [text: string] {
+  let text = (wrap-pairs $text '`' (ansi cyan) (ansi reset))
+  wrap-pairs $text '**' (ansi default_bold) (ansi reset)
+}
+
+# Minimal built-in markdown renderer, used when glow is not installed
+def render-markdown-basic [md: string] {
+  mut in_code = false
+  mut out = []
+
+  for line in ($md | lines) {
+    if ($line | str starts-with "```") {
+      if $in_code {
+        $out = ($out | append $"(ansi dark_gray)╰───(ansi reset)")
+        $in_code = false
+      } else {
+        let lang = ($line | str substring 3.. | str trim)
+        let label = (if $lang == "" { "" } else { $"($lang) " })
+        $out = ($out | append $"(ansi dark_gray)╭─(ansi reset)(ansi cyan_bold)($label)(ansi reset)(ansi dark_gray)────(ansi reset)")
+        $in_code = true
+      }
+    } else if $in_code {
+      $out = ($out | append $"(ansi green)($line)(ansi reset)")
+    } else if ($line | str starts-with "#") {
+      let hashes = ($line | str substring ..2 | str trim)
+      let level = (if $hashes == "###" { 3 } else if $hashes == "##" { 2 } else { 1 })
+      let text = ($line | str substring ($level).. | str trim)
+      $out = ($out | append $"(ansi yellow_bold)($text)(ansi reset)")
+    } else if ($line | str starts-with ">") {
+      $out = ($out | append $"(ansi dark_gray)▎(ansi reset) (ansi default_italic)($line | str substring 1.. | str trim)(ansi reset)")
+    } else if ($line | str starts-with "- ") {
+      $out = ($out | append $"  (ansi cyan)•(ansi reset) (render-inline ($line | str substring 2..))")
+    } else if (($line | parse -r '^(?<n>\d+)\. (?<rest>.*)$') | length) > 0 {
+      let item = ($line | parse -r '^(?<n>\d+)\. (?<rest>.*)$' | first)
+      $out = ($out | append $"  (ansi cyan)($item.n).(ansi reset) (render-inline $item.rest)")
+    } else if ($line | str trim) == "" {
+      $out = ($out | append "")
+    } else {
+      $out = ($out | append (render-inline $line))
+    }
+  }
+
+  $out | str join "\n"
+}
+
+# Render markdown via glow, falling back to the built-in renderer
+def render-markdown [md: string] {
+  if (which glow | is-empty) {
+    return (render-markdown-basic $md)
+  }
+
+  try {
+    render-markdown-glow $md
+  } catch {
+    render-markdown-basic $md
+  }
+}
+
 # Render problem content from local question.md file
 def render-problem-from-md [path: string] {
   try {
@@ -400,7 +492,13 @@ def render-problem-from-md [path: string] {
       _ => $difficulty
     })
 
-    return $"(ansi blue)━━━ Problem Content ━━━(ansi reset)\n(ansi white_bold)($title)(ansi reset) - ($colored_difficulty)\n\n(ansi white)($content)(ansi reset)\n"
+    let body = if ($content | is-empty) {
+      $"(ansi yellow)No description available.(ansi reset)"
+    } else {
+      render-markdown $content
+    }
+
+    return $"(ansi blue)━━━ Problem Content ━━━(ansi reset)\n(ansi white_bold)($title)(ansi reset) - ($colored_difficulty)\n\n($body)\n"
   } catch {
     return null
   }
@@ -434,7 +532,7 @@ def fetch-problem-from-remote [problem_id: string] {
     let description = if ($content | is-empty) {
       $"(ansi yellow)No description available.(ansi reset)"
     } else {
-      $"(ansi white)($content)(ansi reset)"
+      render-markdown $content
     }
 
     return $"(ansi blue)━━━ Problem Content ━━━(ansi reset)\n(ansi white_bold)($title)(ansi reset) - ($colored_difficulty)\nTags: (ansi cyan)($tags)(ansi reset)  |  AC Rate: ($ac_rate)\n\n($description)\n"
@@ -504,10 +602,4 @@ def extract-codetop [] {
   nu scripts/codetop-extractor.nu
 }
 
-# Main entry point
-if ($nu | version | get major) >= 0 {
-  main
-} else {
-  print "Error: This script requires Nushell 0.78 or later"
-  exit 1
-}
+# Main entry point — nu runs `main` automatically when this file is executed as a script
